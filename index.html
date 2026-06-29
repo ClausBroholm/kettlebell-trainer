@@ -193,43 +193,14 @@
     line-height: 1;
   }
 
-  /* SVG FORM ART */
-  .illustration-box .exercise-icon.has-svg { font-size: 0; }
-  .form-art {
+  /* EXERCISE PHOTO */
+  .illustration-box img.exercise-photo {
     width: 100%;
     height: 100%;
+    object-fit: contain;
+    background: #fff;
     display: block;
   }
-  .form-art .limb {
-    fill: none;
-    stroke: var(--text);
-    stroke-width: 5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-  /* chunky silhouette (kettlebell-chart style) */
-  .form-art .body {
-    fill: none;
-    stroke: #b7b7b7;
-    stroke-width: 12;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-  .form-art .body-fill { fill: #b7b7b7; stroke: none; }
-  .form-art .ground {
-    stroke: var(--dim);
-    stroke-width: 3;
-    stroke-linecap: round;
-  }
-  .form-art .bell {
-    fill: rgba(232,68,10,0.18);
-    stroke: var(--accent);
-    stroke-width: 4.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-  .form-art .arrow { stroke: var(--accent); stroke-width: 3; fill: none; stroke-linecap: round; }
-  .form-art .arrow-head { fill: var(--accent); stroke: none; }
 
   .illustration-box .tip-text {
     position: absolute;
@@ -452,6 +423,7 @@
     <div class="exercise-detail" id="exercise-detail">3 sets · 10 reps</div>
 
     <div class="illustration-box">
+      <img class="exercise-photo" id="exercise-img" alt="" style="display:none">
       <div class="exercise-icon" id="exercise-icon">🏋️</div>
       <div class="tip-text" id="tip-text">Kettlebell at chest, sit deep, drive through heels</div>
     </div>
@@ -516,20 +488,7 @@ const EXERCISES = [
     reps: 10,
     timed: false,
     icon: "🏋️",
-    svgArt: `<svg class="form-art" viewBox="0 0 220 150" preserveAspectRatio="xMidYMid meet">
-      <line class="ground" x1="40" y1="134" x2="182" y2="134"/>
-      <line class="body" x1="70" y1="132" x2="104" y2="132"/>
-      <line class="body" x1="96" y1="132" x2="80" y2="102"/>
-      <line class="body" x1="80" y1="102" x2="118" y2="108"/>
-      <line class="body" x1="118" y1="108" x2="110" y2="58"/>
-      <circle class="body-fill" cx="108" cy="44" r="12"/>
-      <line class="body" x1="110" y1="60" x2="113" y2="82"/>
-      <line class="body" x1="113" y1="82" x2="97" y2="84"/>
-      <path class="bell" d="M84 82 Q92 65 100 82"/>
-      <circle class="bell" cx="92" cy="92" r="11"/>
-      <path class="arrow" d="M152 122 V80"/>
-      <path class="arrow-head" d="M152 70 l-7 14 h14 z"/>
-    </svg>`,
+    image: "images/goblet-squat.png",
     tip: "Kettlebell at chest, sit deep, drive through heels",
     voiceReady: "Goblet Squat. Hold the kettlebell at your chest. Sit deep, heels on the floor. 10 reps.",
     voiceDone: "Good. 10 squats done.",
@@ -702,12 +661,15 @@ function updateUI() {
   document.getElementById('exercise-name').textContent = ex.name;
   document.getElementById('exercise-detail').textContent = ex.detail;
   const iconEl = document.getElementById('exercise-icon');
-  if (ex.svgArt) {
-    iconEl.innerHTML = ex.svgArt;
-    iconEl.classList.add('has-svg');
+  const imgEl = document.getElementById('exercise-img');
+  if (ex.image) {
+    imgEl.src = ex.image;
+    imgEl.style.display = 'block';
+    iconEl.style.display = 'none';
   } else {
+    imgEl.style.display = 'none';
+    iconEl.style.display = '';
     iconEl.textContent = ex.icon;
-    iconEl.classList.remove('has-svg');
   }
   document.getElementById('tip-text').textContent = ex.tip;
 
