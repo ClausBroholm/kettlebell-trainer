@@ -594,6 +594,69 @@ const EXERCISES = [
   }
 ];
 
+// Bertha-tone motivation — firm but warm, celebrate small wins, no drill sergeant.
+const MOTIVATION = [
+  "Nice work. That's one more than yesterday's excuse.",
+  "Strong set. Your future self just said thanks.",
+  "That's the work. Small reps, big change.",
+  "Good. Every set is a vote for the man you're becoming.",
+  "Solid. Confidence is built one rep at a time.",
+  "Well done. This is what showing up looks like.",
+  "That counted. Keep stacking the wins.",
+  "Good set. You're not here by accident.",
+  "Strong. Breathe, reset, go again.",
+  "Nice. The hard part is starting, and you already did.",
+  "That's it. Steady beats motivated every time.",
+  "Good work. You're tougher than the voice that says stop.",
+  "Clean reps. Proud of that one.",
+  "Yes. This is the eighty-five kilo version of you, training.",
+  "Strong finish. Rest, then prove it again.",
+  "Good. You don't have to feel like it to do it.",
+  "That's a win. Bank it.",
+  "Solid set. Your heart's working, your head's clearing.",
+  "Nice. Discipline today, freedom tomorrow.",
+  "Well done. Keep the form, keep the pride.",
+  "Good. The kettlebell doesn't care about your day, and neither should the excuses.",
+  "That's the standard. Hold it.",
+  "Strong. You're doing the thing most people only plan.",
+  "Good set. One percent better, that's all this is.",
+  "Yes. Sweat now, smile in the mirror later.",
+  "Nice work. This is self-respect in motion.",
+  "That counted. You're building more than muscle.",
+  "Good. Tired is fine. Quitting is not.",
+  "Solid. You're showing up for the man you said you'd be.",
+  "Strong reps. Keep breathing, stay tall.",
+  "That's it. The body follows the decision.",
+  "Good work. You're winning the argument with yourself.",
+  "Nice. Consistency is your superpower.",
+  "Well done. Every rep is a deposit, not a cost.",
+  "Good. Stay with it, the second half is where it counts.",
+  "Strong. This beats the regret of skipping it.",
+  "That's a good one. Lock it in.",
+  "Yes. You came to train, and you're training.",
+  "Nice set. Form first, ego never.",
+  "Good. The man who finishes is the man who changes.",
+  "Solid work. Rest up, you've earned these seconds.",
+  "Strong. Picture the goal, then go get it.",
+  "That counted double. You almost talked yourself out of it.",
+  "Good set. Calm body, strong mind.",
+  "Nice. You're not chasing perfect, you're chasing better.",
+  "Well done. This is the habit that holds the rest together.",
+  "Good. Finish what the start-screen you promised.",
+  "Strong reps. The shake tastes better after these.",
+  "That's it. Keep showing up like this and the number moves.",
+  "Good work. Be proud, then go again."
+];
+
+let lastMotivationIdx = -1;
+function pickMotivation() {
+  let i;
+  do { i = Math.floor(Math.random() * MOTIVATION.length); }
+  while (i === lastMotivationIdx && MOTIVATION.length > 1);
+  lastMotivationIdx = i;
+  return MOTIVATION[i];
+}
+
 const REST_DURATION = 60; // seconds
 const GET_READY = 5; // seconds auto-countdown before a set starts (auto-continue)
 
@@ -843,7 +906,9 @@ function finishSet() {
     ? ex.restVoice
     : `Rest 60 seconds. Then set ${currentSet + 1} of ${ex.name}.`;
 
-  setTimeout(() => speak(restMsg), 300);
+  // Drop in a motivational line roughly every other set, ahead of the rest cue.
+  const spoken = (completedSets % 2 === 1) ? `${pickMotivation()} ${restMsg}` : restMsg;
+  setTimeout(() => speak(spoken), 300);
 
   const restDuration = ex.name === 'Superman' || ex.name === 'Plank' || ex.name === "Farmer's Carry" ? 45 : REST_DURATION;
 
