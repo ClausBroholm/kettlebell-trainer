@@ -69,6 +69,33 @@
   .summary-name { flex: 1; }
   .summary-detail { font-size: 11px; color: var(--mid); }
 
+  .mode-toggle {
+    display: flex;
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+  }
+
+  .mode-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--mid);
+    border-radius: 9px;
+    padding: 10px 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    line-height: 1.3;
+  }
+
+  .mode-btn small { display: block; font-size: 10px; font-weight: 500; opacity: 0.8; }
+  .mode-btn.active { background: var(--accent); color: #fff; }
+
   .btn-start {
     background: var(--accent);
     color: #fff;
@@ -401,6 +428,11 @@
     <div class="summary-item"><span class="summary-num">9</span><span class="summary-name">Farmer's Carry</span><span class="summary-detail">3 × 20 metres</span></div>
   </div>
 
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="mode-straight" onclick="setMode('straight')">Straight sets<small>~45 min · one at a time</small></button>
+    <button class="mode-btn" id="mode-superset" onclick="setMode('superset')">Supersets<small>~30 min · paired, faster</small></button>
+  </div>
+
   <button class="btn-start" onclick="startWorkout()">Start Workout</button>
   <div class="voice-note">🔊 Turn volume up — voice cues will guide you</div>
 </div>
@@ -660,15 +692,60 @@ function pickMotivation() {
 const REST_DURATION = 60; // seconds
 const GET_READY = 5; // seconds auto-countdown before a set starts (auto-continue)
 
-let currentExercise = 0;
-let currentSet = 1;
-let phase = 'ready'; // ready, work, rest
+let mode = 'straight'; // 'straight' | 'superset'
+let plan = [];         // ordered list of steps, built per mode
+let stepIdx = 0;
+let phase = 'ready';   // ready, work, rest
 let timerInterval = null;
 let timerSeconds = 0;
 let timerTotal = 0;
 let workoutStartTime = null;
-let totalSets = EXERCISES.reduce((a, e) => a + e.sets, 0);
-let completedSets = 0;
+let completedSteps = 0;
+
+// Antagonist pairings for superset mode (indices into EXERCISES); last entry is a solo finisher.
+const SUPERSET_PAIRS = [[0, 1], [2, 3], [4, 5], [6, 7], [8]];
+const TRANSITION_REST = 12; // short switch between two paired exercises
+const PAIR_REST = 45;       // rest after completing a paired round
+
+function straightRest(ex) {
+  return (ex.name === 'Superman' || ex.name === 'Plank' || ex.name === "Farmer's Carry") ? 45 : REST_DURATION;
+}
+
+// Build the ordered list of sets for the chosen mode.
+function buildPlan(m) {
+  const steps = [];
+  if (m === 'superset') {
+    for (const pair of SUPERSET_PAIRS) {
+      const rounds = Math.max(...pair.map(i => EXERCISES[i].sets));
+      for (let r = 1; r <= rounds; r++) {
+        for (let k = 0; k < pair.length; k++) {
+          const ex = EXERCISES[pair[k]];
+          if (r > ex.sets) continue;
+          const lastInPair = (k === pair.length - 1);
+          steps.push({
+            exIdx: pair[k], setNum: r, totalSets: ex.sets,
+            restAfter: pair.length === 1 ? straightRest(ex) : (lastInPair ? PAIR_REST : TRANSITION_REST),
+            isTransition: pair.length > 1 && !lastInPair
+          });
+        }
+      }
+    }
+  } else {
+    for (let e = 0; e < EXERCISES.length; e++) {
+      const ex = EXERCISES[e];
+      for (let s = 1; s <= ex.sets; s++) {
+        steps.push({ exIdx: e, setNum: s, totalSets: ex.sets, restAfter: straightRest(ex), isTransition: false });
+      }
+    }
+  }
+  return steps;
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('mode-straight').classList.toggle('active', m === 'straight');
+  document.getElementById('mode-superset').classList.toggle('active', m === 'superset');
+}
 
 function speak(text) {
   if (!window.speechSynthesis) return;
@@ -713,15 +790,15 @@ function beep(type) {
 }
 
 function updateUI() {
-  const ex = EXERCISES[currentExercise];
-  const nextEx = currentExercise + 1 < EXERCISES.length ? EXERCISES[currentExercise + 1] : null;
-  const isLastSet = currentSet >= ex.sets;
-  const isLastExercise = currentExercise >= EXERCISES.length - 1;
+  const s = plan[stepIdx];
+  const ex = EXERCISES[s.exIdx];
+  const next = stepIdx + 1 < plan.length ? plan[stepIdx + 1] : null;
+  const nextEx = next ? EXERCISES[next.exIdx] : null;
 
   // Progress
-  document.getElementById('progress-text').textContent = `Exercise ${currentExercise + 1} of ${EXERCISES.length}`;
-  document.getElementById('set-badge').textContent = `Set ${currentSet} of ${ex.sets}`;
-  document.getElementById('progress-bar').style.width = `${(completedSets / totalSets) * 100}%`;
+  document.getElementById('progress-text').textContent = `Exercise ${s.exIdx + 1} of ${EXERCISES.length}`;
+  document.getElementById('set-badge').textContent = `Set ${s.setNum} of ${s.totalSets}`;
+  document.getElementById('progress-bar').style.width = `${(completedSteps / plan.length) * 100}%`;
 
   // Exercise info
   document.getElementById('exercise-name').textContent = ex.name;
@@ -797,15 +874,11 @@ function updateUI() {
 
   // Next up
   const nextBox = document.getElementById('next-up-box');
-  if (isLastExercise && isLastSet) {
-    nextBox.style.display = 'none';
-  } else if (phase === 'rest' && isLastSet && nextEx) {
-    document.getElementById('next-up-name').textContent = nextEx.name;
+  if (next) {
+    const sameEx = next.exIdx === s.exIdx;
+    const label = sameEx ? `${nextEx.name} — Set ${next.setNum}` : nextEx.name;
+    document.getElementById('next-up-name').textContent = label;
     document.getElementById('next-up-icon').textContent = nextEx.icon;
-    nextBox.style.display = 'flex';
-  } else if (!isLastSet) {
-    document.getElementById('next-up-name').textContent = `${ex.name} — Set ${currentSet + 1}`;
-    document.getElementById('next-up-icon').textContent = ex.icon;
     nextBox.style.display = 'flex';
   } else {
     nextBox.style.display = 'none';
@@ -844,7 +917,7 @@ function startGetReady() {
   clearInterval(timerInterval);
   phase = 'ready';
   updateUI();
-  const ex = EXERCISES[currentExercise];
+  const ex = EXERCISES[plan[stepIdx].exIdx];
   setTimeout(() => speak(`Get ready. ${ex.name}.`), 250);
   startTimer(GET_READY, () => beginWork());
 }
@@ -852,7 +925,7 @@ function startGetReady() {
 // Enter the working phase for the current set.
 function beginWork() {
   clearInterval(timerInterval);
-  const ex = EXERCISES[currentExercise];
+  const ex = EXERCISES[plan[stepIdx].exIdx];
   phase = 'work';
   updateUI();
   beep('start');
@@ -867,7 +940,7 @@ function beginWork() {
 }
 
 function handleMainBtn() {
-  const ex = EXERCISES[currentExercise];
+  const ex = EXERCISES[plan[stepIdx].exIdx];
 
   if (phase === 'ready') {
     // Skip the get-ready countdown and start the set now
@@ -882,77 +955,57 @@ function handleMainBtn() {
   } else if (phase === 'rest') {
     // Skip rest
     clearInterval(timerInterval);
-    startNextSetOrExercise();
+    advanceStep();
   }
 }
 
 function finishSet() {
-  completedSets++;
-  const ex = EXERCISES[currentExercise];
-  const isLastSet = currentSet >= ex.sets;
-  const isLastExercise = currentExercise >= EXERCISES.length - 1;
+  completedSteps++;
+  const s = plan[stepIdx];
 
-  if (isLastSet && isLastExercise) {
+  if (stepIdx >= plan.length - 1) {
     // Workout done
     setTimeout(() => finishWorkout(), 500);
+    return;
+  }
+
+  const nextEx = EXERCISES[plan[stepIdx + 1].exIdx];
+  const restMsg = s.isTransition
+    ? `Quick switch. Next: ${nextEx.name}.`
+    : `Rest ${s.restAfter} seconds. Next: ${nextEx.name}.`;
+
+  // Drop in a motivational line roughly every other set, ahead of the rest cue.
+  const spoken = (completedSteps % 2 === 1) ? `${pickMotivation()} ${restMsg}` : restMsg;
+
+  if (s.restAfter <= 0) {
+    setTimeout(() => speak(spoken), 200);
+    advanceStep();
     return;
   }
 
   // Start rest
   phase = 'rest';
   updateUI();
-
-  const restMsg = isLastSet
-    ? ex.restVoice
-    : `Rest 60 seconds. Then set ${currentSet + 1} of ${ex.name}.`;
-
-  // Drop in a motivational line roughly every other set, ahead of the rest cue.
-  const spoken = (completedSets % 2 === 1) ? `${pickMotivation()} ${restMsg}` : restMsg;
   setTimeout(() => speak(spoken), 300);
-
-  const restDuration = ex.name === 'Superman' || ex.name === 'Plank' || ex.name === "Farmer's Carry" ? 45 : REST_DURATION;
-
-  startTimer(restDuration, () => {
-    startNextSetOrExercise();
-  });
+  startTimer(s.restAfter, () => advanceStep());
 }
 
-function startNextSetOrExercise() {
+function advanceStep() {
   clearInterval(timerInterval);
-  const ex = EXERCISES[currentExercise];
-  const isLastSet = currentSet >= ex.sets;
-
-  if (isLastSet) {
-    currentExercise++;
-    currentSet = 1;
-  } else {
-    currentSet++;
-  }
-
+  stepIdx++;
   startGetReady();
 }
 
 function skipToNext() {
   clearInterval(timerInterval);
-  const ex = EXERCISES[currentExercise];
-  const isLastSet = currentSet >= ex.sets;
-  const isLastExercise = currentExercise >= EXERCISES.length - 1;
 
-  if (isLastSet && isLastExercise) {
+  if (stepIdx >= plan.length - 1) {
     finishWorkout();
     return;
   }
 
-  if (phase === 'work') completedSets++;
-
-  if (isLastSet) {
-    currentExercise++;
-    currentSet = 1;
-  } else {
-    currentSet++;
-  }
-
-  startGetReady();
+  if (phase === 'work') completedSteps++;
+  advanceStep();
 }
 
 function finishWorkout() {
@@ -973,15 +1026,19 @@ function startWorkout() {
   window.speechSynthesis.getVoices();
 
   workoutStartTime = Date.now();
-  currentExercise = 0;
-  currentSet = 1;
+  plan = buildPlan(mode);
+  stepIdx = 0;
   phase = 'ready';
-  completedSets = 0;
+  completedSteps = 0;
 
   document.getElementById('start-screen').classList.remove('active');
   document.getElementById('workout-screen').classList.add('active');
 
-  speak("Workout starting. First up: Goblet Squat.");
+  const firstName = EXERCISES[plan[0].exIdx].name;
+  const intro = mode === 'superset'
+    ? `Superset workout starting. First up: ${firstName}.`
+    : `Workout starting. First up: ${firstName}.`;
+  speak(intro);
   setTimeout(() => startGetReady(), 1600);
 }
 
