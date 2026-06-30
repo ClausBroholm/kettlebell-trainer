@@ -753,12 +753,21 @@ function setMode(m) {
   document.getElementById('mode-superset').classList.toggle('active', m === 'superset');
 }
 
-// Sequential speech queue so cues never talk over each other.
-// Cues are spoken one after another; only explicit interrupts (user actions,
-// quitting) clear what's pending.
+// Sequential speech queue so cues never talk over each other. Each cue plays a
+// pre-generated audio clip (audio/<id>.mp3) when available, and falls back to
+// the browser's built-in voice otherwise. Only explicit interrupts (user
+// actions, quitting) clear what's pending.
 let speechQueue = [];
 let speaking = false;
 let speechToken = 0;
+let audioEl = null;
+
+// Stable id for a cue's audio file. Must stay in sync with tools/generate-audio.mjs.
+function clipId(text) {
+  let h = 5381;
+  for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) >>> 0;
+  return 'c' + h.toString(16);
+}
 
 function pickVoice() {
   const voices = window.speechSynthesis.getVoices();
@@ -769,7 +778,6 @@ function pickVoice() {
 }
 
 function speak(text, opts) {
-  if (!window.speechSynthesis) return;
   if (opts && opts.interrupt) clearSpeech();
   speechQueue.push(text);
   drainSpeech();
@@ -781,30 +789,76 @@ function drainSpeech() {
   if (text == null) return;
   speaking = true;
   const myToken = ++speechToken;
+  let advanced = false;
   const advance = () => {
-    if (myToken !== speechToken) return; // superseded by clearSpeech / newer utterance
+    if (advanced || myToken !== speechToken) return;
+    advanced = true;
     speaking = false;
+    audioEl = null;
     drainSpeech();
   };
+  let handled = false;
+  const fallback = () => {
+    if (handled || myToken !== speechToken) return;
+    handled = true;
+    audioEl = null;
+    ttsSpeak(text, advance);
+  };
+
+  // Prefer a pre-generated clip; fall back to browser TTS if it's missing.
+  const a = new Audio(`audio/${clipId(text)}.mp3`);
+  audioEl = a;
+  a.onended = () => { if (!handled) { handled = true; advance(); } };
+  a.onerror = fallback;
+  a.play().catch(fallback);
+}
+
+// Browser built-in voice (fallback when a clip isn't present).
+function ttsSpeak(text, done) {
+  if (!window.speechSynthesis) { done(); return; }
   const u = new SpeechSynthesisUtterance(text);
   u.rate = 0.95;
   u.pitch = 1.0;
   u.volume = 1.0;
   const v = pickVoice();
   if (v) u.voice = v;
-  u.onend = u.onerror = advance;
+  u.onend = u.onerror = done;
   window.speechSynthesis.speak(u);
   // Watchdog: some mobile browsers don't fire onend reliably; keep the queue moving.
   const words = text.split(/\s+/).length;
-  setTimeout(advance, Math.min(20000, 400 * words + 2000));
+  setTimeout(done, Math.min(20000, 400 * words + 2000));
 }
 
 // Drop any pending/active speech (used on user-initiated jumps and quitting).
 function clearSpeech() {
   speechQueue = [];
   speaking = false;
-  speechToken++; // invalidate any in-flight onend/watchdog callbacks
+  speechToken++; // invalidate any in-flight callbacks
+  if (audioEl) { try { audioEl.pause(); } catch (e) {} audioEl = null; }
   if (window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+// Every cue string the app can speak — the single source of truth for clip
+// generation. tools/generate-audio.mjs consumes the dumped list (phrases.json).
+function allPhrases() {
+  const set = new Set();
+  for (const ex of EXERCISES) {
+    set.add(ex.voiceReady);
+    set.add(ex.voiceDone);
+    set.add(`Get ready. ${ex.name}.`);
+    set.add(`Next up, ${ex.name}.`);
+  }
+  for (const m of MOTIVATION) set.add(m);
+  const rests = new Set();
+  for (const m of ['straight', 'superset']) {
+    for (const s of buildPlan(m)) { if (!s.isTransition) rests.add(s.restAfter); }
+  }
+  for (const r of rests) set.add(`Rest ${r} seconds.`);
+  set.add('Quick switch.');
+  set.add('Workout starting.');
+  set.add('Superset workout starting.');
+  set.add('Workout complete! Great work. Have your protein shake now — your muscles are waiting.');
+  return [...set];
 }
 
 function beep(type) {
@@ -1015,15 +1069,14 @@ function finishSet() {
   }
 
   const nextEx = EXERCISES[plan[stepIdx + 1].exIdx];
-  const restMsg = s.isTransition
-    ? `Quick switch. Next: ${nextEx.name}.`
-    : `Rest ${s.restAfter} seconds. Next: ${nextEx.name}.`;
 
-  // Drop in a motivational line roughly every other set, ahead of the rest cue.
-  const spoken = (completedSteps % 2 === 1) ? `${pickMotivation()} ${restMsg}` : restMsg;
+  // Atomic cues (each is its own clip): optional motivation, the rest/switch
+  // line, then the next-exercise announcement.
+  if (completedSteps % 2 === 1) speak(pickMotivation());
+  speak(s.isTransition ? 'Quick switch.' : `Rest ${s.restAfter} seconds.`);
+  speak(`Next up, ${nextEx.name}.`);
 
   if (s.restAfter <= 0) {
-    setTimeout(() => speak(spoken), 200);
     advanceStep();
     return;
   }
@@ -1031,7 +1084,6 @@ function finishSet() {
   // Start rest
   phase = 'rest';
   updateUI();
-  setTimeout(() => speak(spoken), 300);
   startTimer(s.restAfter, () => advanceStep());
 }
 
@@ -1080,11 +1132,8 @@ function startWorkout() {
   document.getElementById('start-screen').classList.remove('active');
   document.getElementById('workout-screen').classList.add('active');
 
-  const firstName = EXERCISES[plan[0].exIdx].name;
-  const intro = mode === 'superset'
-    ? `Superset workout starting. First up: ${firstName}.`
-    : `Workout starting. First up: ${firstName}.`;
-  speak(intro);
+  // Intro is name-less; the get-ready cue that follows announces the first exercise.
+  speak(mode === 'superset' ? 'Superset workout starting.' : 'Workout starting.');
   setTimeout(() => startGetReady(), 1600);
 }
 
