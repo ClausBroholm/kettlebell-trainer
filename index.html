@@ -247,6 +247,7 @@
   .timer-bg { stroke: var(--border); }
   .timer-fill { stroke: var(--accent); transition: stroke-dashoffset 0.9s linear; }
   .timer-fill.rest-color { stroke: var(--green); }
+  .timer-fill.ready-color { stroke: var(--blue); }
 
   .timer-inner {
     display: flex;
@@ -594,6 +595,7 @@ const EXERCISES = [
 ];
 
 const REST_DURATION = 60; // seconds
+const GET_READY = 5; // seconds auto-countdown before a set starts (auto-continue)
 
 let currentExercise = 0;
 let currentSet = 1;
@@ -681,7 +683,7 @@ function updateUI() {
   if (phase === 'ready') {
     phaseEl.textContent = 'GET READY';
     phaseEl.className = 'phase-label ready';
-    mainBtn.textContent = `Start Set ${currentSet}`;
+    mainBtn.textContent = 'Start Now';
     mainBtn.className = 'btn-main ready-btn';
   } else if (phase === 'work') {
     phaseEl.textContent = 'WORKING';
@@ -707,12 +709,17 @@ function updateUI() {
   if (phase === 'rest') {
     timerSection.style.display = 'flex';
     repDisplay.style.display = 'none';
-    timerRing.className = 'timer-fill rest-color';
+    timerRing.setAttribute('class', 'timer-fill rest-color');
     document.getElementById('timer-label').textContent = 'rest';
+  } else if (phase === 'ready') {
+    timerSection.style.display = 'flex';
+    repDisplay.style.display = 'none';
+    timerRing.setAttribute('class', 'timer-fill ready-color');
+    document.getElementById('timer-label').textContent = 'get ready';
   } else if (phase === 'work' && ex.timed) {
     timerSection.style.display = 'flex';
     repDisplay.style.display = 'none';
-    timerRing.className = 'timer-fill';
+    timerRing.setAttribute('class', 'timer-fill');
     document.getElementById('timer-label').textContent = 'seconds';
   } else {
     timerSection.style.display = 'none';
@@ -769,22 +776,39 @@ function startTimer(seconds, onComplete) {
   timerInterval = setInterval(tick, 1000);
 }
 
+// Auto-countdown into the set, then start it automatically (no manual tap needed).
+function startGetReady() {
+  clearInterval(timerInterval);
+  phase = 'ready';
+  updateUI();
+  const ex = EXERCISES[currentExercise];
+  setTimeout(() => speak(`Get ready. ${ex.name}.`), 250);
+  startTimer(GET_READY, () => beginWork());
+}
+
+// Enter the working phase for the current set.
+function beginWork() {
+  clearInterval(timerInterval);
+  const ex = EXERCISES[currentExercise];
+  phase = 'work';
+  updateUI();
+  beep('start');
+  speak(ex.voiceReady);
+
+  if (ex.timed) {
+    startTimer(ex.reps, () => {
+      speak(ex.voiceDone);
+      setTimeout(() => finishSet(), 800);
+    });
+  }
+}
+
 function handleMainBtn() {
   const ex = EXERCISES[currentExercise];
 
   if (phase === 'ready') {
-    // Start the set
-    phase = 'work';
-    updateUI();
-    beep('start');
-    speak(ex.voiceReady);
-
-    if (ex.timed) {
-      startTimer(ex.reps, () => {
-        speak(ex.voiceDone);
-        setTimeout(() => finishSet(), 800);
-      });
-    }
+    // Skip the get-ready countdown and start the set now
+    beginWork();
 
   } else if (phase === 'work') {
     // Manual done (reps-based or skip timed)
@@ -840,11 +864,7 @@ function startNextSetOrExercise() {
     currentSet++;
   }
 
-  phase = 'ready';
-  updateUI();
-
-  const newEx = EXERCISES[currentExercise];
-  setTimeout(() => speak(`Up next: ${newEx.name}. Get into position.`), 300);
+  startGetReady();
 }
 
 function skipToNext() {
@@ -867,8 +887,7 @@ function skipToNext() {
     currentSet++;
   }
 
-  phase = 'ready';
-  updateUI();
+  startGetReady();
 }
 
 function finishWorkout() {
@@ -897,8 +916,8 @@ function startWorkout() {
   document.getElementById('start-screen').classList.remove('active');
   document.getElementById('workout-screen').classList.add('active');
 
-  updateUI();
-  setTimeout(() => speak("Workout starting. First up: Goblet Squat. Get into position and tap Start when ready."), 600);
+  speak("Workout starting. First up: Goblet Squat.");
+  setTimeout(() => startGetReady(), 1600);
 }
 
 function quitWorkout() {
