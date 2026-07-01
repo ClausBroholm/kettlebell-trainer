@@ -1,11 +1,12 @@
 # Workout App — Improvements Plan
 
-Investigation of the 5 backlog ideas. **Planning only — nothing here is implemented yet.**
-Status as of the morning review. Effort estimates are rough (S = <30 min, M = ~1–2 h, L = bigger / needs your input).
+Investigation of the 5 backlog ideas. Effort estimates are rough (S = <30 min, M = ~1–2 h, L = bigger / needs your input).
+
+**Status update (2026-07-01): #1, #2, #4, and #5 are all shipped.** Only #3 (Spotify ducking) remains open.
 
 ---
 
-## 1. Auto-continue after pauses — no manual "next" button  ✅ Feasible · Effort: S–M
+## 1. Auto-continue after pauses — no manual "next" button  ✅ Done
 
 **Current flow:** `ready` → tap **Start Set** → `work` → tap **Done** → `rest` (auto countdown) →
 auto-advance to next `ready` → **but then waits for another tap**.
@@ -21,12 +22,9 @@ So the rest timer already auto-runs; the friction is the **"Start Set" tap after
 
 ---
 
-## 2. Better form images per exercise  🔄 In progress · Effort: M (mostly your image gen)
+## 2. Better form images per exercise  ✅ Done
 
-Already built the image system (Goblet Squat + Single Arm Press done). Remaining: generate the other
-7 in the same Start/End style and I wire + push them. **No investigation needed — just finish the set.**
-
-7 left: Reverse Lunge, Single Arm Row, Hip Thrust, Floor Press, Superman, Plank, Farmer's Carry.
+All 9 exercise GIFs wired and pushed.
 
 ---
 
@@ -51,58 +49,34 @@ Already built the image system (Goblet Squat + Single Arm Press done). Remaining
 
 **Recommendation:** Do **D** (cheap, gives you control) and test **A** on your phone before investing further.
 
----
-
-## 4. 50 randomized motivational phrases  ✅ Feasible · Effort: S
-
-Trivial technically. Add an array of ~50 short lines and speak a random one at sensible moments
-(e.g. mid-set, on set completion, start of last set) — without repeating the same one twice in a row.
-
-**Decisions for the morning:**
-- **Language:** Danish, English, or mix? (Current cues are English.)
-- **Tone:** match the "Bertha" coaching style from your CLAUDE.md — *firm but warm, celebrate small wins,
-  no drill-sergeant.* I can draft all 50 in that voice for your approval.
-- **Frequency:** every set is a lot; maybe ~every 2nd–3rd set so it stays special.
-- Interacts with #3 — more talking = more Spotify interruptions. The "Minimal" voice mode should dial these down.
-
-**Recommendation:** I draft 50 lines in Bertha's tone (your chosen language) for you to edit, then wire in.
+**Update (2026-07-01):** Option A landed as a side effect of #5 — all fixed cues now play as pre-recorded
+ElevenLabs clips instead of live `speechSynthesis`. Worth testing on your phone whether that alone reduces
+Spotify interruptions before building **D**'s voice-mode toggle.
 
 ---
 
-## 5. More human voice (better than default TTS)  ✅ Feasible · Effort: M–L depending on approach
+## 4. 50 randomized motivational phrases  ✅ Done
 
-The app already tries to pick a decent system voice (`en-GB Daniel`, etc.), but built-in voices still
-sound robotic. Two real paths:
-
-- **A. Better *system* voices (free, offline, easy).** On iOS you can download **Enhanced/Premium**
-  English voices (Settings → Accessibility → Spoken Content → Voices). The app can prefer those. Cheapest
-  upgrade, zero cost, but quality is capped at "decent."
-
-- **B. Pre-generated high-quality TTS clips (best quality, recommended).** Most of the app's speech is a
-  **fixed set of strings** (exercise cues, rest lines, the 50 motivational phrases). I can generate them
-  once with a premium TTS (ElevenLabs / OpenAI / Google) and bundle them as audio files. Result: a fully
-  natural, consistent voice with **no runtime cost, no API key in the app, works offline.** Only truly
-  dynamic bits (rep counts) would still need fallback TTS or a small set of number clips.
-  - Trade-off: needs a TTS account/key **at build time** (not shipped), and adds audio files to the repo.
-
-- **C. Live cloud TTS at runtime.** Best flexibility but requires a backend or an exposed API key
-  (insecure for a static page) + network during the workout. **Not recommended** for this app.
-
-**Recommendation:** **B** — pre-generate clips for the fixed cues + 50 phrases with a premium voice.
-This *also* helps #3 (pre-recorded audio may interrupt Spotify less). Fallback to **A**'s enhanced
-system voice for dynamic numbers. Needs one decision from you: which TTS provider/voice, and whether
-you're OK adding ~1–3 MB of audio to the repo.
+50 lines shipped in `MOTIVATION` in index.html, in Bertha's coaching tone, English, no-repeat-twice-in-a-row
+picker. Spoken roughly every other completed set.
 
 ---
 
-## Suggested order for the morning
+## 5. More human voice (better than default TTS)  ✅ Done
 
-1. **Finish #2** (send the 7 images) — already in motion, visible payoff.
-2. **#1 auto-continue** — small, high daily-friction win.
-3. **#4 motivational phrases** — fun, easy; I draft 50 in Bertha's tone.
-4. **#5 voice quality (option B)** — the big perceived-quality jump; needs your provider choice.
-5. **#3 Spotify ducking** — set expectations (platform-limited); do the cheap "voice modes" toggle and
-   test pre-recorded clips on your phone before deciding how far to go.
+Went with option **B**: all 91 fixed cue strings (exercise cues, rest lines, transitions, the 50 motivational
+lines) are pre-generated as ElevenLabs clips (voice `5l5f8iK3YPeGga21rQIX`, model `eleven_multilingual_v2`)
+and committed to `audio/`, named by `clipId()` (djb2 hash of the cue text — kept in sync between
+`index.html` and `tools/generate-audio.mjs`). `speak()` plays the matching clip when present and falls back
+to browser `speechSynthesis` only if a clip is missing. Generation cost ~3,857 characters total, well inside
+the ElevenLabs Starter plan's 30k/month credit budget — plenty of room to regenerate with a different voice
+or add more cues later. To regenerate: `ELEVENLABS_API_KEY=... ELEVEN_VOICE_ID=... node tools/generate-audio.mjs`
+(idempotent — only fills gaps unless `--force`).
 
-**Open questions I'll need answered:** language for phrases (DA/EN), TTS provider/voice for #5,
-and whether bundling audio files into the repo is OK.
+---
+
+## What's left
+
+Only **#3 Spotify ducking** is still open. Test on your phone whether the switch to pre-recorded clips
+(landed with #5) already reduces music interruptions — if not, next step is the "voice modes"
+(Full / Minimal / Beeps only) toggle from option D.
