@@ -861,30 +861,46 @@ function allPhrases() {
   return [...set];
 }
 
-function beep(type) {
+// One shared AudioContext, unlocked on the first user gesture (Start tap).
+// Creating a new context per beep breaks on iOS (contexts start suspended and
+// are capped at ~4), which silently killed the countdown beeps mid-workout.
+let audioCtx = null;
+function initAudio() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) {}
+}
+
+function beep(type) {
+  if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  try {
+    const ctx = audioCtx;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
     gain.connect(ctx.destination);
+    const t = ctx.currentTime;
     if (type === 'start') {
       osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-      osc.start(); osc.stop(ctx.currentTime + 0.2);
+      gain.gain.setValueAtTime(0.35, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+      osc.start(t); osc.stop(t + 0.25);
     } else if (type === 'end') {
-      osc.frequency.value = 440;
-      gain.gain.setValueAtTime(0.4, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-      osc.start(); osc.stop(ctx.currentTime + 0.5);
+      // Higher, longer "go" tone at zero.
+      osc.frequency.value = 1046;
+      gain.gain.setValueAtTime(0.5, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+      osc.start(t); osc.stop(t + 0.4);
     } else if (type === 'tick') {
+      // Clearly audible countdown blip.
       osc.frequency.value = 660;
-      gain.gain.setValueAtTime(0.1, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
-      osc.start(); osc.stop(ctx.currentTime + 0.05);
+      gain.gain.setValueAtTime(0.32, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      osc.start(t); osc.stop(t + 0.12);
     }
-  } catch(e) {}
+  } catch (e) {}
 }
 
 function updateUI() {
@@ -1123,8 +1139,9 @@ function finishWorkout() {
 }
 
 function startWorkout() {
-  // Preload voices
+  // Preload voices and unlock audio while we still have the user's tap gesture.
   window.speechSynthesis.getVoices();
+  initAudio();
 
   workoutStartTime = Date.now();
   plan = buildPlan(mode);
