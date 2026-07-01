@@ -1081,16 +1081,19 @@ function finishSet() {
     return;
   }
 
-  // Start rest
+  // Start rest. When it runs out naturally, go straight into the next set
+  // (the rest was the prep, and its final 3-2-1 beeps are the warning).
   phase = 'rest';
   updateUI();
-  startTimer(s.restAfter, () => advanceStep());
+  startTimer(s.restAfter, () => advanceStep(true));
 }
 
-function advanceStep() {
+// immediate=true skips the get-ready countdown and starts the set right away.
+function advanceStep(immediate) {
   clearInterval(timerInterval);
   stepIdx++;
-  startGetReady();
+  if (immediate) beginWork();
+  else startGetReady();
 }
 
 function skipToNext() {
