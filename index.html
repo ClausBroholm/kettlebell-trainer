@@ -410,29 +410,26 @@
 
 <!-- START SCREEN -->
 <div class="screen active" id="start-screen">
-  <div class="logo">🏋️</div>
-  <h1>Wednesday Kettlebell</h1>
-  <p>9 exercises · 3 sets each · ~45 minutes<br>Voice will guide you through every set</p>
+  <div class="logo" id="prog-logo">🏋️</div>
+  <h1 id="prog-name">Wednesday Kettlebell</h1>
+  <p id="prog-blurb">9 exercises · 3 sets each · ~45 minutes<br>Voice will guide you through every set</p>
 
-  <div class="workout-summary">
-    <h3>Today's workout</h3>
-    <div class="summary-item"><span class="summary-num">1</span><span class="summary-name">Goblet Squat</span><span class="summary-detail">3 × 10 reps</span></div>
-    <div class="summary-item"><span class="summary-num">2</span><span class="summary-name">Single Arm Press</span><span class="summary-detail">3 × 8 each arm</span></div>
-    <div class="summary-item"><span class="summary-num">3</span><span class="summary-name">Reverse Lunge</span><span class="summary-detail">3 × 10 each leg</span></div>
-    <div class="summary-item"><span class="summary-num">4</span><span class="summary-name">Single Arm Row</span><span class="summary-detail">3 × 10 each arm</span></div>
-    <div class="summary-item"><span class="summary-num">5</span><span class="summary-name">Hip Thrust</span><span class="summary-detail">3 × 12 reps slow</span></div>
-    <div class="summary-item"><span class="summary-num">6</span><span class="summary-name">Floor Press</span><span class="summary-detail">3 × 10 reps</span></div>
-    <div class="summary-item"><span class="summary-num">7</span><span class="summary-name">Superman</span><span class="summary-detail">3 × 12 reps</span></div>
-    <div class="summary-item"><span class="summary-num">8</span><span class="summary-name">Plank</span><span class="summary-detail">3 × 40 seconds</span></div>
-    <div class="summary-item"><span class="summary-num">9</span><span class="summary-name">Farmer's Carry</span><span class="summary-detail">3 × 20 metres</span></div>
+  <div class="mode-toggle" id="program-toggle">
+    <button class="mode-btn active" id="prog-kettlebell" onclick="selectProgram('kettlebell')">🏋️ Kettlebell<small>strength · Wednesdays</small></button>
+    <button class="mode-btn" id="prog-stretch" onclick="selectProgram('stretch')">🧘 Back Stretch<small>mobility · daily</small></button>
   </div>
 
-  <div class="mode-toggle">
+  <div class="workout-summary">
+    <h3 id="summary-title">Today's session</h3>
+    <div id="summary-list"></div>
+  </div>
+
+  <div class="mode-toggle" id="mode-toggle">
     <button class="mode-btn active" id="mode-straight" onclick="setMode('straight')">Straight sets<small>~45 min · one at a time</small></button>
     <button class="mode-btn" id="mode-superset" onclick="setMode('superset')">Supersets<small>~30 min · paired, faster</small></button>
   </div>
 
-  <button class="btn-start" onclick="startWorkout()">Start Workout</button>
+  <button class="btn-start" onclick="startWorkout()">Start</button>
   <div class="voice-note">🔊 Turn volume up — voice cues will guide you</div>
 </div>
 
@@ -497,22 +494,22 @@
 <!-- DONE SCREEN -->
 <div class="screen" id="done-screen">
   <div class="trophy">🏆</div>
-  <h1>Workout Done!</h1>
-  <p>You completed all 9 exercises.<br>Have your protein shake now — your muscles are waiting.</p>
+  <h1 id="done-title">Workout Done!</h1>
+  <p id="done-sub">Nice work.</p>
 
   <div class="stats-grid">
-    <div class="stat-box"><div class="stat-num">9</div><div class="stat-label">Exercises</div></div>
-    <div class="stat-box"><div class="stat-num">27</div><div class="stat-label">Sets</div></div>
+    <div class="stat-box"><div class="stat-num" id="done-ex">9</div><div class="stat-label">Exercises</div></div>
+    <div class="stat-box"><div class="stat-num" id="done-sets">27</div><div class="stat-label">Sets</div></div>
     <div class="stat-box"><div class="stat-num" id="done-time">45m</div><div class="stat-label">Time</div></div>
   </div>
 
-  <p style="font-size:13px; color:#e8440a; font-weight:600;">Remember: eat your whey shake within 30 min 🥛</p>
+  <p id="done-note" style="font-size:13px; color:#e8440a; font-weight:600;"></p>
 
   <button class="btn-again" onclick="resetWorkout()">Do it again</button>
 </div>
 
 <script>
-const EXERCISES = [
+const KETTLEBELL_EXERCISES = [
   {
     name: "Goblet Squat",
     detail: "3 sets · 10 reps",
@@ -628,9 +625,101 @@ const EXERCISES = [
     tip: "Walk tall, don't let it pull you sideways. Grip tight, core braced.",
     voiceReady: "Farmer's Carry. 20 metres. Walk tall, grip tight, don't lean sideways. Core braced.",
     voiceDone: "Good. Walk back and repeat.",
-    restVoice: "Rest 45 seconds. One more set."
+    restVoice: "Rest 45 seconds. One more set.",
+    unit: "metres"
   }
 ];
+
+// Daily back-mobility routine (desk-worker thoracic stretches). One gentle round.
+const STRETCH_EXERCISES = [
+  {
+    name: "Cat-Cow",
+    detail: "8 slow rounds",
+    sets: 1, reps: 8, timed: false, unit: "rounds",
+    icon: "🐈",
+    tip: "On all fours. Arch and round your back slowly with your breath.",
+    voiceReady: "Cat-Cow. On all fours. Slowly arch and round your back with your breath. 8 slow rounds.",
+    voiceDone: "Good. Your spine is waking up."
+  },
+  {
+    name: "Thoracic Foam Roll",
+    detail: "75 seconds",
+    sets: 1, reps: 75, timed: true,
+    icon: "🌀",
+    tip: "Roller under your upper back, hips lifted, roll slowly along the upper back.",
+    voiceReady: "Thoracic foam roll. Lie back with the roller under your upper back. Lift your hips and roll slowly along your upper back.",
+    voiceDone: "Good. Your upper back is freeing up."
+  },
+  {
+    name: "Thread the Needle",
+    detail: "8 each side",
+    sets: 1, reps: 8, timed: false, unit: "each side",
+    icon: "🧵",
+    tip: "On all fours. Reach one arm up and open, then thread it under and rest the shoulder down.",
+    voiceReady: "Thread the Needle. On all fours. Reach one arm up and open, then thread it under and rest the shoulder down. Breathe. 8 each side.",
+    voiceDone: "Good. Both sides done."
+  },
+  {
+    name: "Puppy Pose",
+    detail: "45 seconds",
+    sets: 1, reps: 45, timed: true,
+    icon: "🐶",
+    tip: "Hands behind your neck, elbows raised, sink your hips back and melt your chest down.",
+    voiceReady: "Extended puppy pose. Hands behind your neck, elbows on a raised surface. Sink your hips back and let your chest melt down.",
+    voiceDone: "Good. Your lats are released."
+  },
+  {
+    name: "Cobra",
+    detail: "30 seconds",
+    sets: 1, reps: 30, timed: true,
+    icon: "🐍",
+    tip: "Lie face down, hands on the mat, gently lift your chest. Keep your hips down.",
+    voiceReady: "Cobra. Lie face down, hands on the mat, and gently lift your chest. Keep your hips down and breathe.",
+    voiceDone: "Good. Your chest is open."
+  },
+  {
+    name: "Child's Pose",
+    detail: "45 seconds",
+    sets: 1, reps: 45, timed: true,
+    icon: "🧎",
+    tip: "Hips back to your heels, arms stretched forward, breathe into your back.",
+    voiceReady: "Child's pose. Sit your hips back to your heels, arms stretched forward, and breathe into your back.",
+    voiceDone: "Nicely done. Your back is happy."
+  }
+];
+
+const PROGRAMS = {
+  kettlebell: {
+    id: "kettlebell",
+    name: "Wednesday Kettlebell",
+    logo: "🏋️",
+    blurb: "9 exercises · 3 sets each · ~45 minutes",
+    supersets: true,
+    motivation: true,
+    intro: "Workout starting.",
+    done: "Workout complete! Great work. Have your protein shake now — your muscles are waiting.",
+    doneNote: "Remember: eat your whey shake within 30 min 🥛",
+    exercises: KETTLEBELL_EXERCISES,
+    supersetPairs: [[0, 1], [2, 3], [4, 5], [6, 7], [8]]
+  },
+  stretch: {
+    id: "stretch",
+    name: "Daily Back Stretch",
+    logo: "🧘",
+    blurb: "6 stretches · ~6 minutes · daily",
+    supersets: false,
+    motivation: false,
+    defaultRest: 15,
+    intro: "Let's loosen up.",
+    done: "Nicely done. Your back thanks you. Same time tomorrow.",
+    doneNote: "Do this daily and your back will thank you 🧘",
+    exercises: STRETCH_EXERCISES
+  }
+};
+
+let programId = "kettlebell";
+let program = PROGRAMS[programId];
+let EXERCISES = program.exercises;
 
 // Bertha-tone motivation — firm but warm, celebrate small wins, no drill sergeant.
 const MOTIVATION = [
@@ -708,20 +797,22 @@ let timerTotal = 0;
 let workoutStartTime = null;
 let completedSteps = 0;
 
-// Antagonist pairings for superset mode (indices into EXERCISES); last entry is a solo finisher.
-const SUPERSET_PAIRS = [[0, 1], [2, 3], [4, 5], [6, 7], [8]];
 const TRANSITION_REST = 12; // short switch between two paired exercises
 const PAIR_REST = 45;       // rest after completing a paired round
 
 function straightRest(ex) {
-  return (ex.name === 'Superman' || ex.name === 'Plank' || ex.name === "Farmer's Carry") ? 45 : REST_DURATION;
+  if (typeof ex.rest === 'number') return ex.rest;
+  if (program.id === 'kettlebell') {
+    return (ex.name === 'Superman' || ex.name === 'Plank' || ex.name === "Farmer's Carry") ? 45 : REST_DURATION;
+  }
+  return program.defaultRest || 30;
 }
 
 // Build the ordered list of sets for the chosen mode.
 function buildPlan(m) {
   const steps = [];
   if (m === 'superset') {
-    for (const pair of SUPERSET_PAIRS) {
+    for (const pair of program.supersetPairs) {
       const rounds = Math.max(...pair.map(i => EXERCISES[i].sets));
       for (let r = 1; r <= rounds; r++) {
         for (let k = 0; k < pair.length; k++) {
@@ -751,6 +842,40 @@ function setMode(m) {
   mode = m;
   document.getElementById('mode-straight').classList.toggle('active', m === 'straight');
   document.getElementById('mode-superset').classList.toggle('active', m === 'superset');
+}
+
+// Switch the active program and repaint the start screen.
+function selectProgram(id) {
+  programId = id;
+  program = PROGRAMS[id];
+  EXERCISES = program.exercises;
+  if (!program.supersets) mode = 'straight';
+  renderStartScreen();
+}
+
+// Paint the start screen for the current program (logo, name, exercise list,
+// and whether the superset toggle is shown).
+function renderStartScreen() {
+  document.getElementById('prog-logo').textContent = program.logo;
+  document.getElementById('prog-name').textContent = program.name;
+  document.getElementById('prog-blurb').innerHTML = `${program.blurb}<br>Voice will guide you the whole way`;
+  document.getElementById('prog-kettlebell').classList.toggle('active', programId === 'kettlebell');
+  document.getElementById('prog-stretch').classList.toggle('active', programId === 'stretch');
+
+  const list = document.getElementById('summary-list');
+  list.innerHTML = '';
+  program.exercises.forEach((ex, i) => {
+    const row = document.createElement('div');
+    row.className = 'summary-item';
+    row.innerHTML = `<span class="summary-num">${i + 1}</span>` +
+      `<span class="summary-name"></span><span class="summary-detail"></span>`;
+    row.children[1].textContent = ex.name;
+    row.children[2].textContent = ex.detail;
+    list.appendChild(row);
+  });
+
+  // Superset toggle only applies to programs that support it.
+  document.getElementById('mode-toggle').style.display = program.supersets ? 'flex' : 'none';
 }
 
 // Sequential speech queue so cues never talk over each other. Each cue plays a
@@ -842,22 +967,29 @@ function clearSpeech() {
 // generation. tools/generate-audio.mjs consumes the dumped list (phrases.json).
 function allPhrases() {
   const set = new Set();
-  for (const ex of EXERCISES) {
-    set.add(ex.voiceReady);
-    set.add(ex.voiceDone);
-    set.add(`Get ready. ${ex.name}.`);
-    set.add(`Next up, ${ex.name}.`);
+  const savedProgram = program;
+  for (const prog of Object.values(PROGRAMS)) {
+    // Temporarily switch context so buildPlan/straightRest use this program's data.
+    program = prog;
+    EXERCISES = prog.exercises;
+    for (const ex of prog.exercises) {
+      set.add(ex.voiceReady);
+      set.add(ex.voiceDone);
+      set.add(`Get ready. ${ex.name}.`);
+      set.add(`Next up, ${ex.name}.`);
+    }
+    const modes = prog.supersets ? ['straight', 'superset'] : ['straight'];
+    for (const m of modes) {
+      for (const s of buildPlan(m)) { if (!s.isTransition) set.add(`Rest ${s.restAfter} seconds.`); }
+    }
+    set.add(prog.intro);
+    set.add(prog.done);
+    if (prog.supersets) set.add('Superset workout starting.');
   }
+  program = savedProgram;
+  EXERCISES = savedProgram.exercises;
   for (const m of MOTIVATION) set.add(m);
-  const rests = new Set();
-  for (const m of ['straight', 'superset']) {
-    for (const s of buildPlan(m)) { if (!s.isTransition) rests.add(s.restAfter); }
-  }
-  for (const r of rests) set.add(`Rest ${r} seconds.`);
   set.add('Quick switch.');
-  set.add('Workout starting.');
-  set.add('Superset workout starting.');
-  set.add('Workout complete! Great work. Have your protein shake now — your muscles are waiting.');
   return [...set];
 }
 
@@ -982,7 +1114,7 @@ function updateUI() {
     const repUnit = document.getElementById('rep-unit');
     if (phase === 'ready' || phase === 'work') {
       repNum.textContent = ex.reps;
-      repUnit.textContent = ex.timed ? 'seconds' : (ex.name === "Farmer's Carry" ? 'metres' : 'reps');
+      repUnit.textContent = ex.timed ? 'seconds' : (ex.unit || 'reps');
     }
   }
 
@@ -1088,7 +1220,7 @@ function finishSet() {
 
   // Atomic cues (each is its own clip): optional motivation, the rest/switch
   // line, then the next-exercise announcement.
-  if (completedSteps % 2 === 1) speak(pickMotivation());
+  if (program.motivation && completedSteps % 2 === 1) speak(pickMotivation());
   speak(s.isTransition ? 'Quick switch.' : `Rest ${s.restAfter} seconds.`);
   speak(`Next up, ${nextEx.name}.`);
 
@@ -1129,13 +1261,15 @@ function finishWorkout() {
   clearInterval(timerInterval);
   const elapsed = Math.round((Date.now() - workoutStartTime) / 60000);
   document.getElementById('done-time').textContent = `${elapsed}m`;
+  document.getElementById('done-ex').textContent = EXERCISES.length;
+  document.getElementById('done-sets').textContent = plan.length;
+  document.getElementById('done-sub').textContent = `You completed all ${EXERCISES.length} ${program.id === 'stretch' ? 'stretches' : 'exercises'}.`;
+  document.getElementById('done-note').textContent = program.doneNote;
 
   document.getElementById('workout-screen').classList.remove('active');
   document.getElementById('done-screen').classList.add('active');
 
-  setTimeout(() => {
-    speak("Workout complete! Great work. Have your protein shake now — your muscles are waiting.");
-  }, 500);
+  setTimeout(() => speak(program.done), 500);
 }
 
 function startWorkout() {
@@ -1153,7 +1287,7 @@ function startWorkout() {
   document.getElementById('workout-screen').classList.add('active');
 
   // Intro is name-less; the get-ready cue that follows announces the first exercise.
-  speak(mode === 'superset' ? 'Superset workout starting.' : 'Workout starting.');
+  speak(mode === 'superset' ? 'Superset workout starting.' : program.intro);
   setTimeout(() => startGetReady(), 1600);
 }
 
@@ -1171,12 +1305,13 @@ function resetWorkout() {
   document.getElementById('start-screen').classList.add('active');
 }
 
-// Preload voices on page load
+// Preload voices and paint the start screen on load.
 window.addEventListener('load', () => {
   if (window.speechSynthesis) {
     window.speechSynthesis.getVoices();
     window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
   }
+  renderStartScreen();
 });
 </script>
 </body>
