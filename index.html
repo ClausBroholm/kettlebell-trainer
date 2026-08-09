@@ -410,24 +410,18 @@
 
 <!-- START SCREEN -->
 <div class="screen active" id="start-screen">
-  <div class="logo" id="prog-logo">🏋️</div>
-  <h1 id="prog-name">Wednesday Kettlebell</h1>
-  <p id="prog-blurb">9 exercises · 3 sets each · ~45 minutes<br>Voice will guide you through every set</p>
+  <div class="logo" id="prog-logo">⚡</div>
+  <h1 id="prog-name">Kettlebell Circuit</h1>
+  <p id="prog-blurb">9 exercises · 3 rounds · circuit<br>Voice will guide you through every set</p>
 
   <div class="mode-toggle" id="program-toggle">
-    <button class="mode-btn active" id="prog-kettlebell" onclick="selectProgram('kettlebell')">🏋️ Kettlebell<small>strength · Wednesdays</small></button>
-    <button class="mode-btn" id="prog-circuit" onclick="selectProgram('circuit')">⚡ Circuit<small>full-body · 3 rounds</small></button>
+    <button class="mode-btn active" id="prog-circuit" onclick="selectProgram('circuit')">⚡ Circuit<small>full-body · 3 rounds</small></button>
     <button class="mode-btn" id="prog-stretch" onclick="selectProgram('stretch')">🧘 Back Stretch<small>mobility · daily</small></button>
   </div>
 
   <div class="workout-summary">
     <h3 id="summary-title">Today's session</h3>
     <div id="summary-list"></div>
-  </div>
-
-  <div class="mode-toggle" id="mode-toggle">
-    <button class="mode-btn active" id="mode-straight" onclick="setMode('straight')">Straight sets<small>~45 min · one at a time</small></button>
-    <button class="mode-btn" id="mode-superset" onclick="setMode('superset')">Supersets<small>~30 min · paired, faster</small></button>
   </div>
 
   <button class="btn-start" onclick="startWorkout()">Start</button>
@@ -510,127 +504,6 @@
 </div>
 
 <script>
-const KETTLEBELL_EXERCISES = [
-  {
-    name: "Goblet Squat",
-    detail: "3 sets · 10 reps",
-    sets: 3,
-    reps: 10,
-    timed: false,
-    icon: "🏋️",
-    image: "images/goblet-squat.gif",
-    tip: "Kettlebell at chest, sit deep, drive through heels",
-    voiceReady: "Goblet Squat. Hold the kettlebell at your chest. Sit deep, heels on the floor. 10 reps.",
-    voiceDone: "Good. 10 squats done.",
-    restVoice: "Rest 60 seconds. Next up: Single Arm Shoulder Press."
-  },
-  {
-    name: "Single Arm Press",
-    detail: "3 sets · 8 reps each arm",
-    sets: 3,
-    reps: 8,
-    timed: false,
-    icon: "💪",
-    image: "images/single-arm-press.gif",
-    tip: "Brace your core, press straight up, don't lean sideways. Both arms.",
-    voiceReady: "Single Arm Shoulder Press. 8 reps each arm. Brace your core, press straight up.",
-    voiceDone: "Good. Switch arms and repeat.",
-    restVoice: "Rest 60 seconds. Next up: Reverse Lunge."
-  },
-  {
-    name: "Reverse Lunge",
-    detail: "3 sets · 10 reps each leg",
-    sets: 3,
-    reps: 10,
-    timed: false,
-    icon: "🦵",
-    image: "images/reverse-lunge.gif",
-    tip: "Step back, lower knee to floor, drive up through front heel. Both legs.",
-    voiceReady: "Reverse Lunge. Step back, lower the back knee to just above the floor. 10 reps each leg.",
-    voiceDone: "Good. Switch legs and repeat.",
-    restVoice: "Rest 60 seconds. Next up: Single Arm Row."
-  },
-  {
-    name: "Single Arm Row",
-    detail: "3 sets · 10 reps each arm",
-    sets: 3,
-    reps: 10,
-    timed: false,
-    icon: "🔄",
-    image: "images/single-arm-row.gif",
-    tip: "Tilt slightly for grip, pull elbow back, squeeze shoulder blade at top.",
-    voiceReady: "Single Arm Row. Tilt slightly for grip. Pull your elbow back, squeeze at the top. 10 reps each arm.",
-    voiceDone: "Good. Switch arms and repeat.",
-    restVoice: "Rest 60 seconds. Next up: Hip Thrust."
-  },
-  {
-    name: "Hip Thrust",
-    detail: "3 sets · 12 reps — slow down",
-    sets: 3,
-    reps: 12,
-    timed: false,
-    icon: "⬆️",
-    image: "images/hip-thrust.gif",
-    tip: "Kettlebell on hips. Squeeze glutes at top. 3-count slow on the way down.",
-    voiceReady: "Hip Thrust. Kettlebell on your hips. Squeeze at the top. Slow 3-count on the way down. 12 reps.",
-    voiceDone: "Good. Slow and controlled.",
-    restVoice: "Rest 60 seconds. Next up: Floor Press."
-  },
-  {
-    name: "Floor Press",
-    detail: "3 sets · 10 reps",
-    sets: 3,
-    reps: 10,
-    timed: false,
-    icon: "🛏️",
-    image: "images/floor-press.gif",
-    tip: "Lie flat, press straight up, control the descent. Both arms or single arm.",
-    voiceReady: "Kettlebell Floor Press. Lie flat on your back. Press straight up, control the way down. 10 reps.",
-    voiceDone: "Good. Chest work done.",
-    restVoice: "Rest 60 seconds. Next up: Superman."
-  },
-  {
-    name: "Superman",
-    detail: "3 sets · 12 reps — no kettlebell",
-    sets: 3,
-    reps: 12,
-    timed: false,
-    icon: "🦸",
-    image: "images/superman.gif",
-    tip: "Lie face down. Lift arms and legs together. Hold 2 seconds at top.",
-    voiceReady: "Superman. No kettlebell. Lie face down, lift arms and legs together. Hold 2 seconds at the top. 12 reps.",
-    voiceDone: "Good. Lower back is done.",
-    restVoice: "Rest 45 seconds. Next up: Plank."
-  },
-  {
-    name: "Plank",
-    detail: "3 sets · 40 seconds",
-    sets: 3,
-    reps: 40,
-    timed: true,
-    icon: "📐",
-    image: "images/plank.png",
-    tip: "Squeeze everything — glutes, core, shoulders. Straight line head to heel.",
-    voiceReady: "Plank. 40 seconds. Squeeze your core, glutes, and shoulders. Straight line, head to heel.",
-    voiceDone: "Plank done.",
-    restVoice: "Rest 45 seconds. Last exercise: Farmer's Carry."
-  },
-  {
-    name: "Farmer's Carry",
-    detail: "3 sets · 20 metres",
-    sets: 3,
-    reps: 20,
-    timed: false,
-    icon: "🚶",
-    image: "images/farmers-carry.gif",
-    tip: "Walk tall, don't let it pull you sideways. Grip tight, core braced.",
-    voiceReady: "Farmer's Carry. 20 metres. Walk tall, grip tight, don't lean sideways. Core braced.",
-    voiceDone: "Good. Walk back and repeat.",
-    restVoice: "Rest 45 seconds. One more set.",
-    unit: "metres"
-  }
-];
-
 // Daily back-mobility routine (desk-worker thoracic stretches). One gentle round.
 const STRETCH_EXERCISES = [
   {
@@ -780,25 +653,11 @@ const CIRCUIT_EXERCISES = [
 ];
 
 const PROGRAMS = {
-  kettlebell: {
-    id: "kettlebell",
-    name: "Wednesday Kettlebell",
-    logo: "🏋️",
-    blurb: "9 exercises · 3 sets each · ~45 minutes",
-    supersets: true,
-    motivation: true,
-    intro: "Workout starting.",
-    done: "Workout complete! Great work. Have your protein shake now — your muscles are waiting.",
-    doneNote: "Remember: eat your whey shake within 30 min 🥛",
-    exercises: KETTLEBELL_EXERCISES,
-    supersetPairs: [[0, 1], [2, 3], [4, 5], [6, 7], [8]]
-  },
   stretch: {
     id: "stretch",
     name: "Daily Back Stretch",
     logo: "🧘",
     blurb: "6 stretches · ~6 minutes · daily",
-    supersets: false,
     motivation: false,
     defaultRest: 15,
     intro: "Let's loosen up.",
@@ -812,7 +671,6 @@ const PROGRAMS = {
     logo: "⚡",
     blurb: "9 exercises · 3 rounds · circuit",
     sets: 3,
-    supersets: true,
     motivation: true,
     defaultMode: "superset",
     intro: "Circuit starting.",
@@ -823,7 +681,7 @@ const PROGRAMS = {
   }
 };
 
-let programId = "kettlebell";
+let programId = "circuit";
 let program = PROGRAMS[programId];
 let EXERCISES = program.exercises;
 
@@ -908,9 +766,6 @@ const PAIR_REST = 45;       // rest after completing a paired round
 
 function straightRest(ex) {
   if (typeof ex.rest === 'number') return ex.rest;
-  if (program.id === 'kettlebell') {
-    return (ex.name === 'Superman' || ex.name === 'Plank' || ex.name === "Farmer's Carry") ? 45 : REST_DURATION;
-  }
   return program.defaultRest || 30;
 }
 
@@ -944,29 +799,20 @@ function buildPlan(m) {
   return steps;
 }
 
-function setMode(m) {
-  mode = m;
-  document.getElementById('mode-straight').classList.toggle('active', m === 'straight');
-  document.getElementById('mode-superset').classList.toggle('active', m === 'superset');
-}
-
 // Switch the active program and repaint the start screen.
 function selectProgram(id) {
   programId = id;
   program = PROGRAMS[id];
   EXERCISES = program.exercises;
-  if (!program.supersets) mode = 'straight';
-  else if (program.defaultMode) mode = program.defaultMode;
+  mode = program.defaultMode || 'straight';
   renderStartScreen();
 }
 
-// Paint the start screen for the current program (logo, name, exercise list,
-// and whether the superset toggle is shown).
+// Paint the start screen for the current program (logo, name, exercise list).
 function renderStartScreen() {
   document.getElementById('prog-logo').textContent = program.logo;
   document.getElementById('prog-name').textContent = program.name;
   document.getElementById('prog-blurb').innerHTML = `${program.blurb}<br>Voice will guide you the whole way`;
-  document.getElementById('prog-kettlebell').classList.toggle('active', programId === 'kettlebell');
   document.getElementById('prog-stretch').classList.toggle('active', programId === 'stretch');
   document.getElementById('prog-circuit').classList.toggle('active', programId === 'circuit');
 
@@ -981,12 +827,6 @@ function renderStartScreen() {
     row.children[2].textContent = ex.detail;
     list.appendChild(row);
   });
-
-  // Superset toggle only applies to programs that support it; keep it in sync
-  // with the active mode (some programs default to superset).
-  document.getElementById('mode-toggle').style.display = program.supersets ? 'flex' : 'none';
-  document.getElementById('mode-straight').classList.toggle('active', mode === 'straight');
-  document.getElementById('mode-superset').classList.toggle('active', mode === 'superset');
 }
 
 // Sequential speech queue so cues never talk over each other. Each cue plays a

@@ -8,8 +8,8 @@
 
 A personal workout web app. A voice-guided trainer that runs you through a
 routine — announces each exercise, counts you down, plays motivational lines,
-shows a form GIF. Two programs so far: **Wednesday Kettlebell** (strength) and
-**Daily Back Stretch** (mobility).
+shows a form GIF. Two programs: **Kettlebell Circuit** (⚡ strength, all 9
+exercises as one continuous round × 3) and **Daily Back Stretch** (mobility).
 
 - **Single file:** everything is in `index.html` (~1300 lines) — vanilla
   HTML/CSS/JS, **no build step, no framework**. This simplicity is deliberate;
@@ -21,15 +21,18 @@ shows a form GIF. Two programs so far: **Wednesday Kettlebell** (strength) and
 
 - **`PROGRAMS`** object is the source of truth for content. Each program has
   `exercises`, plus `logo/name/blurb/intro/done/doneNote`, and flags
-  `supersets`, `motivation`, `defaultRest`. Adding a routine = add a `PROGRAMS`
-  entry; the engine doesn't change. `program` / `EXERCISES` globals point at the
-  active one.
+  `motivation`, `defaultRest`, `defaultMode`. Adding a routine = add a
+  `PROGRAMS` entry; the engine doesn't change. `program` / `EXERCISES` globals
+  point at the active one.
 - **Exercise object:** `{ name, detail, sets, reps, timed, unit?, icon, image?,
   tip, voiceReady, voiceDone }`. `timed:true` → `reps` is seconds (a hold).
   `image` omitted → the `icon` emoji is shown as a placeholder.
 - **Engine = a step-list.** `buildPlan(mode)` expands the program into an ordered
   `plan` of steps (`straight` or `superset`). `stepIdx` walks it. Phases:
-  `ready` (get-ready countdown) → `work` → `rest`.
+  `ready` (get-ready countdown) → `work` → `rest`. There's no user-facing mode
+  toggle anymore — `mode` is set from `program.defaultMode` (falls back to
+  `'straight'`) when a program is selected. Circuit always runs as one big
+  `superset` pack (`supersetPairs: [[0..8]]`); Stretch always runs `straight`.
 - **Get-ready / skip rule (agreed with Claus):** a natural rest expiry goes
   **straight into the next set** (the rest's final 3-2-1 beeps are the warning).
   A *deliberate* skip ("Skip Rest — Go Now", the Skip button, first set) gets a
@@ -51,7 +54,8 @@ shows a form GIF. Two programs so far: **Wednesday Kettlebell** (strength) and
 
 - `index.html` — the whole app.
 - `images/<slug>.gif|png` — form visuals per exercise (`object-fit: contain`).
-- `audio/<clipId>.mp3` — ElevenLabs voice clips (~118). Missing = browser
+- `audio/<clipId>.mp3` — ElevenLabs voice clips (~118, some now orphaned by
+  the Wednesday Kettlebell removal — harmless, not pruned). Missing = browser
   fallback, so partial is fine.
 - `phrases.json` — all cue strings, dumped from `allPhrases()`.
 - `tools/generate-audio.mjs` — reads `phrases.json`, synthesizes clips via the
@@ -89,10 +93,12 @@ shows a form GIF. Two programs so far: **Wednesday Kettlebell** (strength) and
 ## Status & Next
 
 **Done:** auto-continue; get-ready/skip rule; 50 motivational lines
-(kettlebell + circuit); superset toggle; all 9 kettlebell GIFs; ElevenLabs
-premium voice (kettlebell cues); mobile countdown-beep fix; **multi-program** —
-three programs now: Wednesday Kettlebell, **Kettlebell Circuit** (⚡ all 9 as one
-continuous round × 3, defaults to superset), and Daily Back Stretch.
+(kettlebell + circuit); all 9 kettlebell GIFs; ElevenLabs premium voice
+(kettlebell cues); mobile countdown-beep fix; multi-program support;
+**removed Wednesday Kettlebell** (Claus never used straight sets) — the
+picker is now just two programs, **Kettlebell Circuit** (⚡ all 9 as one
+continuous round × 3) and **Daily Back Stretch**; the Straight/Superset mode
+toggle is gone too (no longer needed with one kettlebell program).
 
 **Open / next:**
 1. **Stretch + Circuit GIFs** — no images yet (emoji placeholders). Stretch
@@ -101,9 +107,14 @@ continuous round × 3, defaults to superset), and Daily Back Stretch.
    Circuit reuses several kettlebell moves but has its own names (e.g. Swing,
    Goblet Squat + Curl, Russian Twist) — decide whether to add its own GIFs.
 2. **Stretch + Circuit voice clips** — regenerate audio so the new cues use the
-   premium voice, not fallback. `phrases.json` is now **147** cues total.
+   premium voice, not fallback. `phrases.json` is now **117** cues total.
 3. **More kettlebell exercises** (biggest-bang-for-buck variety) — top pick is
-   the **Kettlebell Swing**; maybe Clean & Press, Turkish Get-Up. Not a big list.
+   the **Kettlebell Swing** (already in Circuit); maybe Clean & Press, Turkish
+   Get-Up. Not a big list.
 4. **#3 Spotify ducking** — platform-limited (see IMPROVEMENTS-PLAN.md). If
    pre-recorded clips don't reduce interruptions enough, add a
    Full / Minimal / Beeps-only voice-mode toggle.
+5. **Prune orphaned audio clips** — `audio/` still has mp3s for
+   Wednesday-Kettlebell-only cues that are no longer referenced. Harmless but
+   could be cleaned up (diff `phrases.json` clip ids against filenames in
+   `audio/`).
