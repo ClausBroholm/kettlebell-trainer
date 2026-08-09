@@ -980,26 +980,32 @@ function updateUI() {
   const next = stepIdx + 1 < plan.length ? plan[stepIdx + 1] : null;
   const nextEx = next ? EXERCISES[next.exIdx] : null;
 
+  // During rest/switch, preview the upcoming exercise in the main area
+  // (name, gif, tip) instead of the one just finished.
+  const previewingNext = phase === 'rest' && next;
+  const dStep = previewingNext ? next : s;
+  const dEx = previewingNext ? nextEx : ex;
+
   // Progress
-  document.getElementById('progress-text').textContent = `Exercise ${s.exIdx + 1} of ${EXERCISES.length}`;
-  document.getElementById('set-badge').textContent = `Set ${s.setNum} of ${s.totalSets}`;
+  document.getElementById('progress-text').textContent = `Exercise ${dStep.exIdx + 1} of ${EXERCISES.length}`;
+  document.getElementById('set-badge').textContent = `Set ${dStep.setNum} of ${dStep.totalSets}`;
   document.getElementById('progress-bar').style.width = `${(completedSteps / plan.length) * 100}%`;
 
   // Exercise info
-  document.getElementById('exercise-name').textContent = ex.name;
-  document.getElementById('exercise-detail').textContent = ex.detail;
+  document.getElementById('exercise-name').textContent = dEx.name;
+  document.getElementById('exercise-detail').textContent = dEx.detail;
   const iconEl = document.getElementById('exercise-icon');
   const imgEl = document.getElementById('exercise-img');
-  if (ex.image) {
-    imgEl.src = ex.image;
+  if (dEx.image) {
+    imgEl.src = dEx.image;
     imgEl.style.display = 'block';
     iconEl.style.display = 'none';
   } else {
     imgEl.style.display = 'none';
     iconEl.style.display = '';
-    iconEl.textContent = ex.icon;
+    iconEl.textContent = dEx.icon;
   }
-  document.getElementById('tip-text').textContent = ex.tip;
+  document.getElementById('tip-text').textContent = dEx.tip;
 
   // Phase label
   const phaseEl = document.getElementById('phase-label');
@@ -1020,9 +1026,9 @@ function updateUI() {
     }
     mainBtn.className = 'btn-main';
   } else if (phase === 'rest') {
-    phaseEl.textContent = 'REST';
+    phaseEl.textContent = s.isTransition ? 'QUICK SWITCH' : 'REST';
     phaseEl.className = 'phase-label rest';
-    mainBtn.textContent = 'Skip Rest — Go Now';
+    mainBtn.textContent = s.isTransition ? 'Skip Switch — Go Now' : 'Skip Rest — Go Now';
     mainBtn.className = 'btn-main rest-btn';
   }
 
@@ -1035,7 +1041,7 @@ function updateUI() {
     timerSection.style.display = 'flex';
     repDisplay.style.display = 'none';
     timerRing.setAttribute('class', 'timer-fill rest-color');
-    document.getElementById('timer-label').textContent = 'rest';
+    document.getElementById('timer-label').textContent = s.isTransition ? 'switch' : 'rest';
   } else if (phase === 'ready') {
     timerSection.style.display = 'flex';
     repDisplay.style.display = 'none';
@@ -1057,9 +1063,10 @@ function updateUI() {
     }
   }
 
-  // Next up
+  // Next up — only shown during ready/work as a small preview; during
+  // rest/switch the main area already previews the upcoming exercise.
   const nextBox = document.getElementById('next-up-box');
-  if (next) {
+  if (next && !previewingNext) {
     const sameEx = next.exIdx === s.exIdx;
     const label = sameEx ? `${nextEx.name} — Set ${next.setNum}` : nextEx.name;
     document.getElementById('next-up-name').textContent = label;
