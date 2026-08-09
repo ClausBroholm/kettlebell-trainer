@@ -416,6 +416,7 @@
 
   <div class="mode-toggle" id="program-toggle">
     <button class="mode-btn active" id="prog-kettlebell" onclick="selectProgram('kettlebell')">🏋️ Kettlebell<small>strength · Wednesdays</small></button>
+    <button class="mode-btn" id="prog-circuit" onclick="selectProgram('circuit')">⚡ Circuit<small>full-body · 3 rounds</small></button>
     <button class="mode-btn" id="prog-stretch" onclick="selectProgram('stretch')">🧘 Back Stretch<small>mobility · daily</small></button>
   </div>
 
@@ -688,6 +689,91 @@ const STRETCH_EXERCISES = [
   }
 ];
 
+// Full-body kettlebell circuit: all 9 run as one continuous round, 3 rounds.
+const CIRCUIT_EXERCISES = [
+  {
+    name: "Kettlebell Swing",
+    detail: "3 sets · 15 reps",
+    sets: 3, reps: 15, timed: false,
+    icon: "🏋️",
+    tip: "Hinge at the hips and snap them forward — let the bell float. It's not a squat.",
+    voiceReady: "Kettlebell Swing. Hinge at the hips and snap them forward to float the bell up. 15 reps.",
+    voiceDone: "Good. Powerful hips."
+  },
+  {
+    name: "Goblet Squat + Curl",
+    detail: "3 sets · 10 reps",
+    sets: 3, reps: 10, timed: false,
+    icon: "🔄",
+    tip: "Curl the bell to your chest, then sit deep into a squat.",
+    voiceReady: "Goblet Squat and Curl. Curl the bell to your chest, then sit deep into a squat. 10 reps.",
+    voiceDone: "Good. Legs and arms both."
+  },
+  {
+    name: "Single Arm Row",
+    detail: "3 sets · 10 each arm",
+    sets: 3, reps: 10, timed: false, unit: "each arm",
+    icon: "🔄",
+    tip: "Hinge forward, pull your elbow back, squeeze the shoulder blade. Both arms.",
+    voiceReady: "Single Arm Row. Hinge forward, pull your elbow back and squeeze at the top. 10 each arm.",
+    voiceDone: "Good. Both arms done."
+  },
+  {
+    name: "Reverse Lunge + Curl",
+    detail: "3 sets · 10 each leg",
+    sets: 3, reps: 10, timed: false, unit: "each leg",
+    icon: "🦵",
+    tip: "Step back into a lunge as you curl the bell. Both legs.",
+    voiceReady: "Reverse Lunge and Curl. Step back into a lunge as you curl the bell. 10 each leg.",
+    voiceDone: "Good. Both legs."
+  },
+  {
+    name: "Single Arm Press",
+    detail: "3 sets · 8 each arm",
+    sets: 3, reps: 8, timed: false, unit: "each arm",
+    icon: "💪",
+    tip: "Brace your core and press straight overhead. Both arms.",
+    voiceReady: "Single Arm Press. Brace your core and press straight overhead. 8 each arm.",
+    voiceDone: "Good. Both arms pressed."
+  },
+  {
+    name: "Russian Twist",
+    detail: "3 sets · 20 reps",
+    sets: 3, reps: 20, timed: false,
+    icon: "🌀",
+    tip: "Lean back, brace your core, rotate the bell side to side with control.",
+    voiceReady: "Russian Twist. Lean back, brace your core, and rotate side to side. 20 reps total.",
+    voiceDone: "Good. Core is lit."
+  },
+  {
+    name: "Floor Press",
+    detail: "3 sets · 10 reps",
+    sets: 3, reps: 10, timed: false,
+    icon: "🛏️",
+    tip: "Lie flat, press straight up, control the way down.",
+    voiceReady: "Floor Press. Lie flat on your back and press straight up, controlling the way down. 10 reps.",
+    voiceDone: "Good. Chest done."
+  },
+  {
+    name: "Farmer's Carry",
+    detail: "3 sets · 20 metres",
+    sets: 3, reps: 20, timed: false, unit: "metres",
+    icon: "🚶",
+    tip: "Walk tall, grip tight, don't lean sideways. Core braced.",
+    voiceReady: "Farmer's Carry. 20 metres. Walk tall, grip tight, and don't lean sideways.",
+    voiceDone: "Good. Strong walk."
+  },
+  {
+    name: "Plank",
+    detail: "3 sets · 40 seconds",
+    sets: 3, reps: 40, timed: true,
+    icon: "📐",
+    tip: "Straight line head to heel. Squeeze core, glutes, and shoulders.",
+    voiceReady: "Plank. 40 seconds. Straight line from head to heel. Squeeze everything.",
+    voiceDone: "Plank done. Nice finish."
+  }
+];
+
 const PROGRAMS = {
   kettlebell: {
     id: "kettlebell",
@@ -714,6 +800,21 @@ const PROGRAMS = {
     done: "Nicely done. Your back thanks you. Same time tomorrow.",
     doneNote: "Do this daily and your back will thank you 🧘",
     exercises: STRETCH_EXERCISES
+  },
+  circuit: {
+    id: "circuit",
+    name: "Kettlebell Circuit",
+    logo: "⚡",
+    blurb: "9 exercises · 3 rounds · circuit",
+    sets: 3,
+    supersets: true,
+    motivation: true,
+    defaultMode: "superset",
+    intro: "Circuit starting.",
+    done: "Circuit complete! Great work. Have your protein shake — you earned it.",
+    doneNote: "Remember: eat your whey shake within 30 min 🥛",
+    exercises: CIRCUIT_EXERCISES,
+    supersetPairs: [[0, 1, 2, 3, 4, 5, 6, 7, 8]]
   }
 };
 
@@ -850,6 +951,7 @@ function selectProgram(id) {
   program = PROGRAMS[id];
   EXERCISES = program.exercises;
   if (!program.supersets) mode = 'straight';
+  else if (program.defaultMode) mode = program.defaultMode;
   renderStartScreen();
 }
 
@@ -861,6 +963,7 @@ function renderStartScreen() {
   document.getElementById('prog-blurb').innerHTML = `${program.blurb}<br>Voice will guide you the whole way`;
   document.getElementById('prog-kettlebell').classList.toggle('active', programId === 'kettlebell');
   document.getElementById('prog-stretch').classList.toggle('active', programId === 'stretch');
+  document.getElementById('prog-circuit').classList.toggle('active', programId === 'circuit');
 
   const list = document.getElementById('summary-list');
   list.innerHTML = '';
@@ -874,8 +977,11 @@ function renderStartScreen() {
     list.appendChild(row);
   });
 
-  // Superset toggle only applies to programs that support it.
+  // Superset toggle only applies to programs that support it; keep it in sync
+  // with the active mode (some programs default to superset).
   document.getElementById('mode-toggle').style.display = program.supersets ? 'flex' : 'none';
+  document.getElementById('mode-straight').classList.toggle('active', mode === 'straight');
+  document.getElementById('mode-superset').classList.toggle('active', mode === 'superset');
 }
 
 // Sequential speech queue so cues never talk over each other. Each cue plays a

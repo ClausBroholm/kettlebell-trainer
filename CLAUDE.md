@@ -89,16 +89,19 @@ shows a form GIF. Two programs so far: **Wednesday Kettlebell** (strength) and
 ## Status & Next
 
 **Done:** auto-continue; get-ready/skip rule; 50 motivational lines
-(kettlebell only); superset toggle; all 9 kettlebell GIFs; ElevenLabs premium
-voice (kettlebell cues); mobile countdown-beep fix; **multi-program** (Daily
-Back Stretch added).
+(kettlebell + circuit); superset toggle; all 9 kettlebell GIFs; ElevenLabs
+premium voice (kettlebell cues); mobile countdown-beep fix; **multi-program** —
+three programs now: Wednesday Kettlebell, **Kettlebell Circuit** (⚡ all 9 as one
+continuous round × 3, defaults to superset), and Daily Back Stretch.
 
 **Open / next:**
-1. **Stretch GIFs** — Claus to add 6 files to `images/`: `cat-cow.gif`,
-   `thoracic-foam-roll.gif`, `thread-the-needle.gif`, `puppy-pose.gif`,
-   `cobra.gif`, `childs-pose.gif`; then wire `image:` on each stretch exercise.
-2. **Stretch voice clips** — regenerate audio (27 new cues already in
-   `phrases.json`) so the stretch program uses the premium voice, not fallback.
+1. **Stretch + Circuit GIFs** — no images yet (emoji placeholders). Stretch
+   needs 6 files in `images/`: `cat-cow.gif`, `thoracic-foam-roll.gif`,
+   `thread-the-needle.gif`, `puppy-pose.gif`, `cobra.gif`, `childs-pose.gif`.
+   Circuit reuses several kettlebell moves but has its own names (e.g. Swing,
+   Goblet Squat + Curl, Russian Twist) — decide whether to add its own GIFs.
+2. **Stretch + Circuit voice clips** — regenerate audio so the new cues use the
+   premium voice, not fallback. `phrases.json` is now **147** cues total.
 3. **More kettlebell exercises** (biggest-bang-for-buck variety) — top pick is
    the **Kettlebell Swing**; maybe Clean & Press, Turkish Get-Up. Not a big list.
 4. **#3 Spotify ducking** — platform-limited (see IMPROVEMENTS-PLAN.md). If
