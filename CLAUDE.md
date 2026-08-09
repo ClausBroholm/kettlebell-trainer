@@ -94,27 +94,61 @@ exercises as one continuous round × 3) and **Daily Back Stretch** (mobility).
 
 **Done:** auto-continue; get-ready/skip rule; 50 motivational lines
 (kettlebell + circuit); all 9 kettlebell GIFs; ElevenLabs premium voice
-(kettlebell cues); mobile countdown-beep fix; multi-program support;
-**removed Wednesday Kettlebell** (Claus never used straight sets) — the
-picker is now just two programs, **Kettlebell Circuit** (⚡ all 9 as one
-continuous round × 3) and **Daily Back Stretch**; the Straight/Superset mode
-toggle is gone too (no longer needed with one kettlebell program).
+(kettlebell cues); mobile countdown-beep fix; multi-program support.
+
+**Done this session (2026-08-09):**
+- **Removed Wednesday Kettlebell** (Claus never used straight sets) — the
+  picker is now just two programs, **Kettlebell Circuit** (⚡ all 9 as one
+  continuous round × 3) and **Daily Back Stretch**; the Straight/Superset
+  mode toggle is gone too (no longer needed with one kettlebell program).
+- **Fixed a real bug:** `mode` didn't sync to the default program on page
+  load (the initial `programId="circuit"` assignment bypassed
+  `selectProgram()`, which is what normally sets `mode` from
+  `program.defaultMode`). Circuit was silently running as 3 straight sets of
+  the same exercise back-to-back (with a generic 30s rest) instead of
+  cycling all 9 exercises per round. `mode` is now initialized from
+  `program.defaultMode` at declaration time.
+- **Removed the Skip button** — "Done — Start Rest" / "Skip Rest — Go Now"
+  already cover exiting a set or rest early.
+- **Rest/switch screen now previews the next exercise, not the last one:**
+  the main area (name, gif/icon, tip) shows the *upcoming* exercise during
+  rest so Claus can see its form before it starts; the small "Next" box is
+  hidden during rest (redundant now) but still shows during ready/work. The
+  12s between-exercise pause now visually reads "QUICK SWITCH" (matching the
+  "Quick switch." voice cue) instead of "REST" — only the 45s round-end rest
+  says "REST".
+- **Fixed Goblet Squat + Curl cue order** — squat first, then curl on the way
+  up (tip/voice text had it backwards).
 
 **Open / next:**
 1. **Stretch + Circuit GIFs** — no images yet (emoji placeholders). Stretch
    needs 6 files in `images/`: `cat-cow.gif`, `thoracic-foam-roll.gif`,
    `thread-the-needle.gif`, `puppy-pose.gif`, `cobra.gif`, `childs-pose.gif`.
-   Circuit reuses several kettlebell moves but has its own names (e.g. Swing,
-   Goblet Squat + Curl, Russian Twist) — decide whether to add its own GIFs.
-2. **Stretch + Circuit voice clips** — regenerate audio so the new cues use the
-   premium voice, not fallback. `phrases.json` is now **117** cues total.
-3. **More kettlebell exercises** (biggest-bang-for-buck variety) — top pick is
-   the **Kettlebell Swing** (already in Circuit); maybe Clean & Press, Turkish
-   Get-Up. Not a big list.
-4. **#3 Spotify ducking** — platform-limited (see IMPROVEMENTS-PLAN.md). If
+   Circuit needs 4: `kettlebell-swing.gif`, `goblet-squat-curl.gif`,
+   `reverse-lunge-curl.gif`, `russian-twist.gif` (the other 5 already reuse
+   kettlebell GIFs). Claus to upload to `images/` in a future session.
+2. **Stretch + Circuit voice clips** — regenerate audio so the new/changed
+   cues use the premium voice, not fallback. `phrases.json` is **117** cues
+   total, **56 currently missing** audio (browser-voice fallback). Doable
+   directly in a Project-Cockpit session (not the blocked cloud sandbox) if
+   Claus supplies `ELEVENLABS_API_KEY` (+ `ELEVEN_VOICE_ID` if not the
+   default).
+3. **Per-exercise kettlebell weight (KG) selector** — Claus wants to specify
+   which KG kettlebell he's using for each exercise, so it's easy to grab the
+   right one before a set. Not designed yet. Options to weigh next session:
+   a static `weightKg` field per exercise in the `PROGRAMS` data (simplest,
+   but requires editing code to change) vs. an editable value per exercise
+   persisted in `localStorage` (no data-editing needed, survives reloads) vs.
+   just showing it during the get-ready/work screen either way. Decide
+   storage + where it's edited (start-screen summary list vs. in-workout)
+   before implementing.
+4. **More kettlebell exercises** (biggest-bang-for-buck variety) — top pick
+   was the **Kettlebell Swing** (now in Circuit); maybe Clean & Press,
+   Turkish Get-Up. Not a big list.
+5. **#3 Spotify ducking** — platform-limited (see IMPROVEMENTS-PLAN.md). If
    pre-recorded clips don't reduce interruptions enough, add a
    Full / Minimal / Beeps-only voice-mode toggle.
-5. **Prune orphaned audio clips** — `audio/` still has mp3s for
-   Wednesday-Kettlebell-only cues that are no longer referenced. Harmless but
-   could be cleaned up (diff `phrases.json` clip ids against filenames in
-   `audio/`).
+6. **Prune orphaned audio clips** — `audio/` still has mp3s for
+   Wednesday-Kettlebell-only and old-text cues that are no longer referenced.
+   Harmless but could be cleaned up (diff `phrases.json` clip ids against
+   filenames in `audio/`).
