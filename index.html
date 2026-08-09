@@ -358,17 +358,6 @@
   .btn-main.rest-btn { background: var(--green); }
   .btn-main.ready-btn { background: var(--blue); }
 
-  .btn-skip {
-    background: none;
-    border: 1px solid var(--border);
-    color: var(--mid);
-    border-radius: 10px;
-    padding: 12px;
-    font-size: 14px;
-    cursor: pointer;
-    width: 100%;
-  }
-
   /* DONE SCREEN */
   #done-screen { justify-content: center; align-items: center; text-align: center; gap: 20px; }
   #done-screen .trophy { font-size: 72px; }
@@ -481,7 +470,6 @@
 
   <div class="bottom-controls">
     <button class="btn-main" id="main-btn" onclick="handleMainBtn()">Done — Start Rest</button>
-    <button class="btn-skip" onclick="skipToNext()">Skip</button>
   </div>
 
 </div>
@@ -684,6 +672,7 @@ const PROGRAMS = {
 let programId = "circuit";
 let program = PROGRAMS[programId];
 let EXERCISES = program.exercises;
+let mode = program.defaultMode || 'straight'; // 'straight' | 'superset'
 
 // Bertha-tone motivation — firm but warm, celebrate small wins, no drill sergeant.
 const MOTIVATION = [
@@ -751,7 +740,6 @@ function pickMotivation() {
 const REST_DURATION = 60; // seconds
 const GET_READY = 5; // seconds auto-countdown before a set starts (auto-continue)
 
-let mode = 'straight'; // 'straight' | 'superset'
 let plan = [];         // ordered list of steps, built per mode
 let stepIdx = 0;
 let phase = 'ready';   // ready, work, rest
@@ -1193,19 +1181,6 @@ function advanceStep(immediate) {
   stepIdx++;
   if (immediate) beginWork();
   else startGetReady();
-}
-
-function skipToNext() {
-  clearInterval(timerInterval);
-  clearSpeech();
-
-  if (stepIdx >= plan.length - 1) {
-    finishWorkout();
-    return;
-  }
-
-  if (phase === 'work') completedSteps++;
-  advanceStep();
 }
 
 function finishWorkout() {
