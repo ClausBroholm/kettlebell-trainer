@@ -119,14 +119,23 @@ exercises as one continuous round × 3) and **Daily Back Stretch** (mobility).
   says "REST".
 - **Fixed Goblet Squat + Curl cue order** — squat first, then curl on the way
   up (tip/voice text had it backwards).
+- **Fixed a stale-placeholder flash on Start** — `startWorkout()` switched to
+  the workout screen before calling `updateUI()`, so the static HTML
+  placeholder ("Goblet Squat", a Wednesday-Kettlebell leftover) briefly
+  showed before the real first exercise appeared ~1.6s later. `updateUI()`
+  now runs immediately when the plan is built.
+- **Added 3 of 4 Circuit GIFs**: `kettlebell-swing.gif`,
+  `goblet-squat-curl.gif`, and `russian-twist.gif` are wired up. Note
+  `kettlebell-swing.gif` is 7.3MB — much larger than every other GIF in the
+  app (1.4-5.1MB range); left as-is for now, revisit if it loads slowly on
+  Claus's phone.
 
 **Open / next:**
-1. **Stretch + Circuit GIFs** — no images yet (emoji placeholders). Stretch
-   needs 6 files in `images/`: `cat-cow.gif`, `thoracic-foam-roll.gif`,
-   `thread-the-needle.gif`, `puppy-pose.gif`, `cobra.gif`, `childs-pose.gif`.
-   Circuit needs 4: `kettlebell-swing.gif`, `goblet-squat-curl.gif`,
-   `reverse-lunge-curl.gif`, `russian-twist.gif` (the other 5 already reuse
-   kettlebell GIFs). Claus to upload to `images/` in a future session.
+1. **Stretch + Circuit GIFs** — Stretch still needs 6 files in `images/`:
+   `cat-cow.gif`, `thoracic-foam-roll.gif`, `thread-the-needle.gif`,
+   `puppy-pose.gif`, `cobra.gif`, `childs-pose.gif`. Circuit still needs 1:
+   `reverse-lunge-curl.gif` (the other 8 are done — 5 reuse kettlebell GIFs,
+   3 added this session). Claus to upload to `images/` in a future session.
 2. **Stretch + Circuit voice clips** — regenerate audio so the new/changed
    cues use the premium voice, not fallback. `phrases.json` is **117** cues
    total, **56 currently missing** audio (browser-voice fallback). Doable
