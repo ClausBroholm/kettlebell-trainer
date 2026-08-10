@@ -200,6 +200,18 @@
     text-align: center;
   }
 
+  .weight-badge {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 3px 12px;
+    border-radius: 999px;
+    background: rgba(240,165,0,0.15);
+    color: var(--yellow);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+
   /* ILLUSTRATION */
   .illustration-box {
     width: 100%;
@@ -439,6 +451,7 @@
     <div class="phase-label work" id="phase-label">GET READY</div>
     <div class="exercise-name" id="exercise-name">Goblet Squat</div>
     <div class="exercise-detail" id="exercise-detail">3 sets · 10 reps</div>
+    <div class="weight-badge" id="weight-badge" style="display:none"></div>
 
     <div class="illustration-box">
       <img class="exercise-photo" id="exercise-img" alt="" style="display:none">
@@ -560,7 +573,7 @@ const CIRCUIT_EXERCISES = [
   {
     name: "Kettlebell Swing",
     detail: "3 sets · 15 reps",
-    sets: 3, reps: 15, timed: false, estSeconds: 20,
+    sets: 3, reps: 15, timed: false, estSeconds: 20, weightKg: 16,
     icon: "🏋️",
     image: "images/kettlebell-swing.gif",
     tip: "Hinge at the hips and snap them forward — let the bell float. It's not a squat.",
@@ -570,7 +583,7 @@ const CIRCUIT_EXERCISES = [
   {
     name: "Goblet Squat + Curl",
     detail: "3 sets · 10 reps",
-    sets: 3, reps: 10, timed: false, estSeconds: 30,
+    sets: 3, reps: 10, timed: false, estSeconds: 30, weightKg: 12,
     icon: "🔄",
     image: "images/goblet-squat-curl.gif",
     tip: "Sit deep into a squat, then curl the bell to your chest as you stand.",
@@ -580,7 +593,7 @@ const CIRCUIT_EXERCISES = [
   {
     name: "Single Arm Row",
     detail: "3 sets · 10 each arm",
-    sets: 3, reps: 10, timed: false, unit: "each arm", estSeconds: 40,
+    sets: 3, reps: 10, timed: false, unit: "each arm", estSeconds: 40, weightKg: 12,
     icon: "🔄",
     image: "images/single-arm-row.gif",
     tip: "Hinge forward, pull your elbow back, squeeze the shoulder blade. Both arms.",
@@ -590,7 +603,7 @@ const CIRCUIT_EXERCISES = [
   {
     name: "Reverse Lunge + Curl",
     detail: "3 sets · 10 each leg",
-    sets: 3, reps: 10, timed: false, unit: "each leg", estSeconds: 60,
+    sets: 3, reps: 10, timed: false, unit: "each leg", estSeconds: 60, weightKg: 8,
     icon: "🦵",
     image: "images/reverse-lunge-curl.gif",
     tip: "Step back into a lunge as you curl the bell. Both legs.",
@@ -600,7 +613,7 @@ const CIRCUIT_EXERCISES = [
   {
     name: "Single Arm Press",
     detail: "3 sets · 8 each arm",
-    sets: 3, reps: 8, timed: false, unit: "each arm", estSeconds: 40,
+    sets: 3, reps: 8, timed: false, unit: "each arm", estSeconds: 40, weightKg: 8,
     icon: "💪",
     image: "images/single-arm-press.gif",
     tip: "Brace your core and press straight overhead. Both arms.",
@@ -610,7 +623,7 @@ const CIRCUIT_EXERCISES = [
   {
     name: "Russian Twist",
     detail: "3 sets · 20 reps",
-    sets: 3, reps: 20, timed: false, estSeconds: 30,
+    sets: 3, reps: 20, timed: false, estSeconds: 30, weightKg: 8,
     icon: "🌀",
     image: "images/russian-twist.gif",
     tip: "Lean back, brace your core, rotate the bell side to side with control.",
@@ -620,7 +633,7 @@ const CIRCUIT_EXERCISES = [
   {
     name: "Floor Press",
     detail: "3 sets · 10 reps",
-    sets: 3, reps: 10, timed: false, estSeconds: 30,
+    sets: 3, reps: 10, timed: false, estSeconds: 30, weightKg: 12,
     icon: "🛏️",
     image: "images/floor-press.gif",
     tip: "Lie flat, press straight up, control the way down.",
@@ -630,7 +643,7 @@ const CIRCUIT_EXERCISES = [
   {
     name: "Farmer's Carry",
     detail: "3 sets · 20 metres",
-    sets: 3, reps: 20, timed: false, unit: "metres", estSeconds: 25,
+    sets: 3, reps: 20, timed: false, unit: "metres", estSeconds: 25, weightKg: 16,
     icon: "🚶",
     image: "images/farmers-carry.gif",
     tip: "Walk tall, grip tight, don't lean sideways. Core braced.",
@@ -835,7 +848,7 @@ function renderStartScreen() {
     row.innerHTML = `<span class="summary-num">${i + 1}</span>` +
       `<span class="summary-name"></span><span class="summary-detail"></span>`;
     row.children[1].textContent = ex.name;
-    row.children[2].textContent = ex.detail;
+    row.children[2].textContent = ex.weightKg ? `${ex.detail} · ${ex.weightKg} kg` : ex.detail;
     list.appendChild(row);
   });
 
@@ -1032,6 +1045,13 @@ function updateUI() {
     iconEl.textContent = dEx.icon;
   }
   document.getElementById('tip-text').textContent = dEx.tip;
+  const weightBadge = document.getElementById('weight-badge');
+  if (dEx.weightKg) {
+    weightBadge.textContent = `🔔 ${dEx.weightKg} kg`;
+    weightBadge.style.display = 'inline-block';
+  } else {
+    weightBadge.style.display = 'none';
+  }
 
   // Phase label
   const phaseEl = document.getElementById('phase-label');

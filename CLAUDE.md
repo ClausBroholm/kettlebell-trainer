@@ -25,10 +25,15 @@ exercises as one continuous round × 3) and **Daily Back Stretch** (mobility).
   `PROGRAMS` entry; the engine doesn't change. `program` / `EXERCISES` globals
   point at the active one.
 - **Exercise object:** `{ name, detail, sets, reps, timed, unit?, icon, image?,
-  tip, voiceReady, voiceDone, estSeconds? }`. `timed:true` → `reps` is seconds
-  (a hold). `image` omitted → the `icon` emoji is shown as a placeholder.
-  `estSeconds` (rep-based exercises only) is a rough guess at how long the set
-  takes, used by **Auto-Timed Mode** (see below).
+  tip, voiceReady, voiceDone, estSeconds?, weightKg? }`. `timed:true` → `reps`
+  is seconds (a hold). `image` omitted → the `icon` emoji is shown as a
+  placeholder. `estSeconds` (rep-based exercises only) is a rough guess at
+  how long the set takes, used by **Auto-Timed Mode** (see below). `weightKg`
+  is Claus's suggested kettlebell weight for that exercise — shown as a badge
+  on the start-screen summary list and on the workout screen (via `dEx`, so
+  during rest/switch it already shows the *upcoming* exercise's weight —
+  exactly when Claus needs to know which bell to grab next). Omit the field
+  for bodyweight exercises (e.g. Plank) — the badge just doesn't render.
 - **Auto-Timed Mode** (`autoTimeMode`, start-screen toggle, persisted in
   `localStorage['ktAutoTimeMode']`): when on, rep-based exercises auto-advance
   after `ex.estSeconds` instead of waiting for a manual tap — same mechanic as
@@ -151,16 +156,27 @@ exercises as one continuous round × 3) and **Daily Back Stretch** (mobility).
   manual tap, so Claus doesn't have to touch the phone mid-set. Added
   `estSeconds` guesses to all 8 rep-based Circuit exercises and Stretch's 2
   non-timed ones (Cat-Cow, Thread the Needle) — see architecture note above.
-  **These are rough estimates and need real-world testing/tuning** (item 3
+  **These are rough estimates and need real-world testing/tuning** (item 1
   below).
+- **Added per-exercise kettlebell weight suggestions** — `weightKg` field on
+  each Circuit exercise (Claus is a 47yo male beginner, "normal strength,"
+  goal = solidly fatigued by the last rep of set 3): Kettlebell Swing 16kg,
+  Goblet Squat + Curl 12kg, Single Arm Row 12kg, Reverse Lunge + Curl 8kg,
+  Single Arm Press 8kg, Russian Twist 8kg, Floor Press 12kg, Farmer's Carry
+  16kg, Plank bodyweight (no field). Shown as a badge on the start-screen
+  summary list and on the workout screen (via `dEx`, so it previews the
+  *upcoming* exercise's weight during rest/switch). Went with the simple
+  static-field approach (not an in-app editor) since Claus edits by asking —
+  matches how `estSeconds` tuning already works.
 
 **Open / next:**
-1. **Tune `estSeconds` values** — Claus should try Auto-Timed Mode and adjust
-   the per-exercise `estSeconds` in `CIRCUIT_EXERCISES`/`STRETCH_EXERCISES`
-   to match his actual pace. Current guesses (seconds): Kettlebell Swing 20,
-   Goblet Squat + Curl 30, Single Arm Row 40, Reverse Lunge + Curl 60, Single
-   Arm Press 40, Russian Twist 30, Floor Press 30, Farmer's Carry 25, Cat-Cow
-   32, Thread the Needle 48.
+1. **Tune `estSeconds` and `weightKg` values** — Claus should run Circuit and
+   report back what felt off for each exercise; both are rough guesses meant
+   to be adjusted after real-world testing. Current `estSeconds` (seconds):
+   Kettlebell Swing 20, Goblet Squat + Curl 30, Single Arm Row 40, Reverse
+   Lunge + Curl 60, Single Arm Press 40, Russian Twist 30, Floor Press 30,
+   Farmer's Carry 25, Cat-Cow 32, Thread the Needle 48. Current `weightKg`:
+   see architecture note above (8/12/16kg per exercise).
 2. **Stretch GIFs** — still needs all 6 files in `images/`: `cat-cow.gif`,
    `thoracic-foam-roll.gif`, `thread-the-needle.gif`, `puppy-pose.gif`,
    `cobra.gif`, `childs-pose.gif`. Circuit is fully done. Claus to upload to
@@ -171,22 +187,13 @@ exercises as one continuous round × 3) and **Daily Back Stretch** (mobility).
    directly in a Project-Cockpit session (not the blocked cloud sandbox) if
    Claus supplies `ELEVENLABS_API_KEY` (+ `ELEVEN_VOICE_ID` if not the
    default).
-4. **Per-exercise kettlebell weight (KG) selector** — Claus wants to specify
-   which KG kettlebell he's using for each exercise, so it's easy to grab the
-   right one before a set. Not designed yet. Options to weigh next session:
-   a static `weightKg` field per exercise in the `PROGRAMS` data (simplest,
-   but requires editing code to change) vs. an editable value per exercise
-   persisted in `localStorage` (no data-editing needed, survives reloads) vs.
-   just showing it during the get-ready/work screen either way. Decide
-   storage + where it's edited (start-screen summary list vs. in-workout)
-   before implementing.
-5. **More kettlebell exercises** (biggest-bang-for-buck variety) — top pick
+4. **More kettlebell exercises** (biggest-bang-for-buck variety) — top pick
    was the **Kettlebell Swing** (now in Circuit); maybe Clean & Press,
    Turkish Get-Up. Not a big list.
-6. **#3 Spotify ducking** — platform-limited (see IMPROVEMENTS-PLAN.md). If
+5. **#3 Spotify ducking** — platform-limited (see IMPROVEMENTS-PLAN.md). If
    pre-recorded clips don't reduce interruptions enough, add a
    Full / Minimal / Beeps-only voice-mode toggle.
-7. **Prune orphaned audio clips** — `audio/` still has mp3s for
+6. **Prune orphaned audio clips** — `audio/` still has mp3s for
    Wednesday-Kettlebell-only and old-text cues that are no longer referenced.
    Harmless but could be cleaned up (diff `phrases.json` clip ids against
    filenames in `audio/`).
