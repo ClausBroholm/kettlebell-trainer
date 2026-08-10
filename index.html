@@ -1215,6 +1215,7 @@ function startWorkout() {
   stepIdx = 0;
   phase = 'ready';
   completedSteps = 0;
+  updateUI();
 
   document.getElementById('start-screen').classList.remove('active');
   document.getElementById('workout-screen').classList.add('active');
