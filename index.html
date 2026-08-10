@@ -413,6 +413,11 @@
     <div id="summary-list"></div>
   </div>
 
+  <div class="mode-toggle" id="autotime-toggle">
+    <button class="mode-btn active" id="autotime-off" onclick="setAutoTimeMode(false)">Manual<small>tap when you're done</small></button>
+    <button class="mode-btn" id="autotime-on" onclick="setAutoTimeMode(true)">⏱️ Auto-Timed<small>estimated, hands-free</small></button>
+  </div>
+
   <button class="btn-start" onclick="startWorkout()">Start</button>
   <div class="voice-note">🔊 Turn volume up — voice cues will guide you</div>
 </div>
@@ -497,7 +502,7 @@ const STRETCH_EXERCISES = [
   {
     name: "Cat-Cow",
     detail: "8 slow rounds",
-    sets: 1, reps: 8, timed: false, unit: "rounds",
+    sets: 1, reps: 8, timed: false, unit: "rounds", estSeconds: 32,
     icon: "🐈",
     tip: "On all fours. Arch and round your back slowly with your breath.",
     voiceReady: "Cat-Cow. On all fours. Slowly arch and round your back with your breath. 8 slow rounds.",
@@ -515,7 +520,7 @@ const STRETCH_EXERCISES = [
   {
     name: "Thread the Needle",
     detail: "8 each side",
-    sets: 1, reps: 8, timed: false, unit: "each side",
+    sets: 1, reps: 8, timed: false, unit: "each side", estSeconds: 48,
     icon: "🧵",
     tip: "On all fours. Reach one arm up and open, then thread it under and rest the shoulder down.",
     voiceReady: "Thread the Needle. On all fours. Reach one arm up and open, then thread it under and rest the shoulder down. Breathe. 8 each side.",
@@ -555,7 +560,7 @@ const CIRCUIT_EXERCISES = [
   {
     name: "Kettlebell Swing",
     detail: "3 sets · 15 reps",
-    sets: 3, reps: 15, timed: false,
+    sets: 3, reps: 15, timed: false, estSeconds: 20,
     icon: "🏋️",
     image: "images/kettlebell-swing.gif",
     tip: "Hinge at the hips and snap them forward — let the bell float. It's not a squat.",
@@ -565,7 +570,7 @@ const CIRCUIT_EXERCISES = [
   {
     name: "Goblet Squat + Curl",
     detail: "3 sets · 10 reps",
-    sets: 3, reps: 10, timed: false,
+    sets: 3, reps: 10, timed: false, estSeconds: 30,
     icon: "🔄",
     image: "images/goblet-squat-curl.gif",
     tip: "Sit deep into a squat, then curl the bell to your chest as you stand.",
@@ -575,7 +580,7 @@ const CIRCUIT_EXERCISES = [
   {
     name: "Single Arm Row",
     detail: "3 sets · 10 each arm",
-    sets: 3, reps: 10, timed: false, unit: "each arm",
+    sets: 3, reps: 10, timed: false, unit: "each arm", estSeconds: 40,
     icon: "🔄",
     image: "images/single-arm-row.gif",
     tip: "Hinge forward, pull your elbow back, squeeze the shoulder blade. Both arms.",
@@ -585,7 +590,7 @@ const CIRCUIT_EXERCISES = [
   {
     name: "Reverse Lunge + Curl",
     detail: "3 sets · 10 each leg",
-    sets: 3, reps: 10, timed: false, unit: "each leg",
+    sets: 3, reps: 10, timed: false, unit: "each leg", estSeconds: 60,
     icon: "🦵",
     image: "images/reverse-lunge-curl.gif",
     tip: "Step back into a lunge as you curl the bell. Both legs.",
@@ -595,7 +600,7 @@ const CIRCUIT_EXERCISES = [
   {
     name: "Single Arm Press",
     detail: "3 sets · 8 each arm",
-    sets: 3, reps: 8, timed: false, unit: "each arm",
+    sets: 3, reps: 8, timed: false, unit: "each arm", estSeconds: 40,
     icon: "💪",
     image: "images/single-arm-press.gif",
     tip: "Brace your core and press straight overhead. Both arms.",
@@ -605,7 +610,7 @@ const CIRCUIT_EXERCISES = [
   {
     name: "Russian Twist",
     detail: "3 sets · 20 reps",
-    sets: 3, reps: 20, timed: false,
+    sets: 3, reps: 20, timed: false, estSeconds: 30,
     icon: "🌀",
     image: "images/russian-twist.gif",
     tip: "Lean back, brace your core, rotate the bell side to side with control.",
@@ -615,7 +620,7 @@ const CIRCUIT_EXERCISES = [
   {
     name: "Floor Press",
     detail: "3 sets · 10 reps",
-    sets: 3, reps: 10, timed: false,
+    sets: 3, reps: 10, timed: false, estSeconds: 30,
     icon: "🛏️",
     image: "images/floor-press.gif",
     tip: "Lie flat, press straight up, control the way down.",
@@ -625,7 +630,7 @@ const CIRCUIT_EXERCISES = [
   {
     name: "Farmer's Carry",
     detail: "3 sets · 20 metres",
-    sets: 3, reps: 20, timed: false, unit: "metres",
+    sets: 3, reps: 20, timed: false, unit: "metres", estSeconds: 25,
     icon: "🚶",
     image: "images/farmers-carry.gif",
     tip: "Walk tall, grip tight, don't lean sideways. Core braced.",
@@ -677,6 +682,20 @@ let programId = "circuit";
 let program = PROGRAMS[programId];
 let EXERCISES = program.exercises;
 let mode = program.defaultMode || 'straight'; // 'straight' | 'superset'
+
+// Auto-Timed Mode: rep-based exercises auto-advance after an estimated
+// duration (ex.estSeconds) instead of waiting for a manual "Done" tap.
+// Persisted across sessions since it's a personal pacing preference.
+let autoTimeMode = localStorage.getItem('ktAutoTimeMode') === '1';
+function isTimedNow(ex) {
+  return ex.timed || (autoTimeMode && typeof ex.estSeconds === 'number');
+}
+function setAutoTimeMode(on) {
+  autoTimeMode = on;
+  localStorage.setItem('ktAutoTimeMode', on ? '1' : '0');
+  document.getElementById('autotime-off').classList.toggle('active', !on);
+  document.getElementById('autotime-on').classList.toggle('active', on);
+}
 
 // Bertha-tone motivation — firm but warm, celebrate small wins, no drill sergeant.
 const MOTIVATION = [
@@ -819,6 +838,9 @@ function renderStartScreen() {
     row.children[2].textContent = ex.detail;
     list.appendChild(row);
   });
+
+  document.getElementById('autotime-off').classList.toggle('active', !autoTimeMode);
+  document.getElementById('autotime-on').classList.toggle('active', autoTimeMode);
 }
 
 // Sequential speech queue so cues never talk over each other. Each cue plays a
@@ -1023,8 +1045,10 @@ function updateUI() {
   } else if (phase === 'work') {
     phaseEl.textContent = 'WORKING';
     phaseEl.className = 'phase-label work';
-    if (ex.timed) {
+    if (isTimedNow(ex)) {
       mainBtn.textContent = 'Done Early';
+    } else if (s.isTransition) {
+      mainBtn.textContent = 'Next Exercise';
     } else {
       mainBtn.textContent = 'Done — Start Rest';
     }
@@ -1051,7 +1075,7 @@ function updateUI() {
     repDisplay.style.display = 'none';
     timerRing.setAttribute('class', 'timer-fill ready-color');
     document.getElementById('timer-label').textContent = 'get ready';
-  } else if (phase === 'work' && ex.timed) {
+  } else if (phase === 'work' && isTimedNow(ex)) {
     timerSection.style.display = 'flex';
     repDisplay.style.display = 'none';
     timerRing.setAttribute('class', 'timer-fill');
@@ -1129,6 +1153,11 @@ function beginWork() {
 
   if (ex.timed) {
     startTimer(ex.reps, () => {
+      speak(ex.voiceDone);
+      setTimeout(() => finishSet(), 800);
+    });
+  } else if (autoTimeMode && typeof ex.estSeconds === 'number') {
+    startTimer(ex.estSeconds, () => {
       speak(ex.voiceDone);
       setTimeout(() => finishSet(), 800);
     });
