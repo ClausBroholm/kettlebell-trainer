@@ -8,7 +8,7 @@
 
 A personal workout web app. A voice-guided trainer that runs you through a
 routine — announces each exercise, counts you down, plays motivational lines,
-shows a form GIF. Two programs: **Kettlebell Circuit** (⚡ strength, all 9
+shows a form GIF. Two programs: **Kettlebell Circuit** (⚡ strength, all 10
 exercises as one continuous round × 3) and **Daily Back Stretch** (mobility).
 
 - **Single file:** everything is in `index.html` (~1300 lines) — vanilla
@@ -48,7 +48,7 @@ exercises as one continuous round × 3) and **Daily Back Stretch** (mobility).
   `ready` (get-ready countdown) → `work` → `rest`. There's no user-facing mode
   toggle anymore — `mode` is set from `program.defaultMode` (falls back to
   `'straight'`) when a program is selected. Circuit always runs as one big
-  `superset` pack (`supersetPairs: [[0..8]]`); Stretch always runs `straight`.
+  `superset` pack (`supersetPairs: [[0..9]]`); Stretch always runs `straight`.
 - **Get-ready / skip rule (agreed with Claus):** a natural rest expiry goes
   **straight into the next set** (the rest's final 3-2-1 beeps are the warning).
   A *deliberate* skip ("Skip Rest — Go Now", the Skip button, first set) gets a
@@ -108,11 +108,24 @@ exercises as one continuous round × 3) and **Daily Back Stretch** (mobility).
 
 ## Status & Next
 
+**Latest (2026-08-10, reconciled after a two-session collision):** the Circuit
+is now **10 exercises** — Swing, Goblet Squat, Reverse Lunge, Single Arm Row,
+Single Arm Press, **Kettlebell Curl**, **Push-Ups**, **Hip Thrust**, Russian
+Twist, Plank. The +Curl combos were **split** into plain Goblet Squat / Reverse
+Lunge + a standalone Curl; **Farmer's Carry and Floor Press were dropped**
+(space / redundant with Push-Ups). All `weightKg: 8` bumped to **12**. Bigger
+exercise-name / timer / rep **fonts** (read the phone from across the room).
+`allPhrases()` now enumerates a program's `defaultMode` (circuit has no
+`supersets` flag) so its superset cues get generated. `phrases.json` = **123**.
+Curl / Push-Ups have **no GIFs yet** (emoji); Hip Thrust reuses `hip-thrust.gif`.
+The Circuit's voice clips still need **regeneration** to stop falling back to the
+browser voice (that's the "silent circuit").
+
 **Done:** auto-continue; get-ready/skip rule; 50 motivational lines
-(kettlebell + circuit); all 9 kettlebell GIFs; ElevenLabs premium voice
+(kettlebell + circuit); all kettlebell GIFs; ElevenLabs premium voice
 (kettlebell cues); mobile countdown-beep fix; multi-program support.
 
-**Done this session (2026-08-09):**
+**Done earlier session (2026-08-09):**
 - **Removed Wednesday Kettlebell** (Claus never used straight sets) — the
   picker is now just two programs, **Kettlebell Circuit** (⚡ all 9 as one
   continuous round × 3) and **Daily Back Stretch**; the Straight/Superset
