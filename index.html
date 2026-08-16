@@ -1263,14 +1263,38 @@ function finishWorkout() {
 
   document.getElementById('workout-screen').classList.remove('active');
   document.getElementById('done-screen').classList.add('active');
+  releaseWakeLock();
 
   setTimeout(() => speak(program.done), 500);
 }
+
+// Keep the screen awake during a workout (Screen Wake Lock; iOS 16.4+, Android
+// Chrome). iOS releases the lock whenever the tab is hidden, so re-acquire it
+// when the page becomes visible again mid-workout.
+let wakeLock = null;
+let workoutActive = false;
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator && document.visibilityState === 'visible') {
+      wakeLock = await navigator.wakeLock.request('screen');
+    }
+  } catch (e) {}
+}
+function releaseWakeLock() {
+  workoutActive = false;
+  try { if (wakeLock) wakeLock.release(); } catch (e) {}
+  wakeLock = null;
+}
+document.addEventListener('visibilitychange', () => {
+  if (workoutActive && document.visibilityState === 'visible') requestWakeLock();
+});
 
 function startWorkout() {
   // Preload voices and unlock audio while we still have the user's tap gesture.
   window.speechSynthesis.getVoices();
   initAudio();
+  workoutActive = true;
+  requestWakeLock();
 
   workoutStartTime = Date.now();
   plan = buildPlan(mode);
@@ -1291,6 +1315,7 @@ function quitWorkout() {
   if (confirm("Quit workout?")) {
     clearInterval(timerInterval);
     clearSpeech();
+    releaseWakeLock();
     resetWorkout();
   }
 }
